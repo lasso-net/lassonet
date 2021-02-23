@@ -3,7 +3,7 @@ Demo code for the LassoNet method proposed in "LassoNet: A Neural Network with F
 
 ## Supporting material
 - [Paper](https://arxiv.org/pdf/1907.12207.pdf)
-- Video tutorial [[short version](https://www.youtube.com/watch?v=G5vPojso9PU)] [[long version](https://www.youtube.com/watch?v=ztGcoMPazwc)]
+- Video tutorials [[short version](https://www.youtube.com/watch?v=G5vPojso9PU)] [[long version](https://www.youtube.com/watch?v=ztGcoMPazwc)]
 - [Slides](https://ismael.lemhadri.org/papers/pdf/lassonet_slides.pdf)
 - [Poster](https://ismael.lemhadri.org/papers/pdf/lassonet_poster.pdf)
 
