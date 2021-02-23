@@ -42,7 +42,7 @@ One png file will be saved in your directory, which is a visualization of the re
 ### Tips
 LassoNet sometimes require fine tuning. For optimal performance, consider
 - checking that the dense model with ![](https://latex.codecogs.com/svg.latex?%5Clambda%20%3D%200) has acceptable accuracy before running over the entire regularization path
-- make sure the stepsize over the $\lambda$ path is not too large. By default, the stepsize runs over the logscale between two values ![](https://latex.codecogs.com/svg.latex?%5Clambda_%7Bmin%7D) and ![](https://latex.codecogs.com/svg.latex?%5Clambda_%7Bmin%7D).
+- making sure the stepsize over the ![](https://latex.codecogs.com/svg.latex?%5Clambda) path is not too large. By default, the stepsize runs over the logscale between two values ![](https://latex.codecogs.com/svg.latex?%5Clambda_%7Bmin%7D) and ![](https://latex.codecogs.com/svg.latex?%5Clambda_%7Bmin%7D).
 
 ## Citation
 For more details, see the accompanying paper: ["LassoNet: A Neural Network with Feature Sparsity"](https://arxiv.org/abs/1907.12207), *AISTATS 2021*, and please use the citation below.
