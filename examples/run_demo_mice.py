@@ -55,7 +55,8 @@ def load_mice(one_hot = False):
     X = X.astype(np.float32)
     Y = Y.astype(np.float32)
     
-    print(X.shape, Y.shape)
+    # print(X.shape, Y.shape)
+    print("data shape : {}".format(X.shape))
     
     return (X[: X.shape[0] * 4 // 5], Y[: X.shape[0] * 4 // 5]), (X[X.shape[0] * 4 // 5:], Y[X.shape[0] * 4 // 5: ])
 
@@ -98,4 +99,7 @@ plt.savefig('accuracy.png')
 
 import pickle
 indices = pickle.load(open(name+'-indices.pkl','rb'))
-print(indices['lassonet'])
+# print(indices['lassonet'])
+
+# To access snapshots of the model along the regularization path, we can call
+# lassonet_results['snapshots']. More details in 'lassonet_trainer.py'

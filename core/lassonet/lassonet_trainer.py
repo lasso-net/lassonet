@@ -121,19 +121,21 @@ def lassonet_trainer(name, train, test, utils = {}):
         print("dense model achieved train/test accuracy:{:.3f}/{:.3f} after {} epochs".format(
                 train_acc,test_acc,epoch))
 
-
-    # path training
-    alpha_max_lasso = (X_train.T.dot(y_train)/X_train.shape[0]).max()
-    alpha_min = alpha_max_lasso * utils.get('lambda_min_multiplier', 1e-2)
-    
-    optimizer = torch.optim.SGD(model.parameters(), lr = LR, momentum = 0.9)
-    alphas = [alpha_min]
-    
+   
+    # save several metrics about the dense model
     coefs = [model.skip_connections[0].weight.detach().cpu().numpy().max(axis=0)]
     nselected = [nfeats]
     train_accs = [train_acc]
     test_accs = [test_acc]
     indices = {nfeats:np.arange(nfeats)}
+    snapshots = [model.state_dict().copy()]
+
+    # path training
+    alpha_max_lasso = (X_train.T.dot(y_train)/X_train.shape[0]).max()
+    alpha_min = alpha_max_lasso * utils.get('lambda_min_multiplier', 1e-2)
+    optimizer = torch.optim.SGD(model.parameters(), lr = LR, momentum = 0.9)
+    alphas = [alpha_min]
+
     while nselected[-1] != 0:
         best_obj = np.inf
         epochs_since_best_obj = 0
@@ -150,6 +152,9 @@ def lassonet_trainer(name, train, test, utils = {}):
             if (patience > 0) and (epochs_since_best_obj == patience):
                 break
             epochs_since_best_obj += 1
+
+        # take snapshot of model
+        snapshots.append(model.state_dict().copy())
 
         # record number of selected features
         coef = model.skip_connections[0].weight.detach().cpu().numpy().max(axis=0)
@@ -187,6 +192,7 @@ def lassonet_trainer(name, train, test, utils = {}):
     utils['nselected'] = np.array(nselected)
     utils['train_accuracy'] = np.array(train_accs)
     utils['alphas'] = np.array(alphas)
+    utils['snapshots'] = snapshots
     
     
     # save updated utils
