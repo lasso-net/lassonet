@@ -14,7 +14,7 @@ def replace(match):
     return markdown2.markdown_path(filename)
 
 
-index = re.sub("{{(\w+)}}", replace, template)
+index = re.sub(r"{{(\w+)}}", replace, template)
 
 with open("index.html", "w") as f:
     f.write(index)
