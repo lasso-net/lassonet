@@ -11,50 +11,13 @@ def sign_binary(x):
     return torch.where(x >= 0, ones, -ones)
 
 
-def _find_w(v, u, lambda_, lambda_bar, M):
-    """
-    v has shape (1,) or (1, batches)
-    u has shape (k,) or (k, batches)
-    """
-    vshape = v.shape
-    if len(vshape) == 1:
-        v = v.view(-1, 1)
-        u = u.view(-1, 1)
-
-    u_abs_sorted = torch.sort(u.abs(), dim=0, descending=True).values
-
-    k, batch = u.shape
-    m = torch.arange(k + 1.0).view(-1, 1)
-    zeros = torch.zeros(1, batch)
-
-    x = torch.abs(v) / M + torch.cat([zeros, torch.cumsum(u_abs_sorted, dim=0)])
-    w = soft_threshold(lambda_bar * m + lambda_ / M, x) / (m + 1 / M ** 2)
-
-    intervals = soft_threshold(lambda_bar, u_abs_sorted)
-    lower = torch.cat([intervals, zeros])
-
-    idx = torch.sum(lower > w, dim=0).unsqueeze(0)
-    return torch.gather(w, 0, idx).view(*vshape)
-
-
 def prox(v, u, lambda_, lambda_bar, M):
-    """
-    v has shape (1,) or (1, batches)
-    u has shape (k,) or (k, batches)
-    """
-    w = _find_w(v, u, lambda_, lambda_bar, M)
-    beta = sign_binary(v) * w / M
-    theta = u.sign() * torch.min(soft_threshold(lambda_bar, u.abs()), w)
-    return beta, theta
-
-
-def prox2(v, u, lambda_, lambda_bar, M):
     """
     v has shape (m,) or (m, batches)
     u has shape (k,) or (k, batches)
 
     supports GPU tensors
-    
+
     we want |u|_inf <= ||v||_2 for every batch
     """
     onedim = len(v.shape) == 1
@@ -97,7 +60,6 @@ def prox2(v, u, lambda_, lambda_bar, M):
 
 
 def inplace_prox(beta, theta, lambda_, lambda_bar, M):
-    beta.weight.data, theta.weight.data = prox2(
-        beta.weight.data, theta.weight.data, lambda_ = lambda_, lambda_bar =
-        lambda_bar, M = M
+    beta.weight.data, theta.weight.data = prox(
+        beta.weight.data, theta.weight.data, lambda_=lambda_, lambda_bar=lambda_bar, M=M
     )
