@@ -1,0 +1,230 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>lassonet.LassoNetRegressor &#8212; LassoNet  documentation</title>
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="lassonet.LassoNetClassifier" href="lassonet.LassoNetClassifier.html" />
+    <link rel="prev" title="Welcome to LassoNet’s documentation!" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="lassonet-lassonetregressor">
+<h1>lassonet.LassoNetRegressor<a class="headerlink" href="#lassonet-lassonetregressor" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="lassonet.LassoNetRegressor">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">lassonet.</span></code><code class="sig-name descname"><span class="pre">LassoNetRegressor</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_dims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(100)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lambda_</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_lambdas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_multiplier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">M</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_iters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(3000,</span> <span class="pre">400)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">torch_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lassonet.LassoNetRegressor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use LassoNet as regressor</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hidden_dims</strong> (<em>tuple of int</em><em>, </em><em>default=</em><em>(</em><em>100</em><em>,</em><em>)</em>) – Shape of the hidden layers.</p></li>
+<li><p><strong>lambda_</strong> (<em>None</em><em> or </em><em>float</em><em>, </em><em>default=None</em>) – Regularization parameter. Not needed for cross-validation estimators.</p></li>
+<li><p><strong>eps</strong> (<em>float</em><em>, </em><em>default=1e-2</em>) – First value on the path. The corresponding <cite>lambda_</cite> will be lambda_max * eps</p></li>
+<li><p><strong>n_lambdas</strong> (<em>int</em><em>, </em><em>default=100</em>) – Number of lambda values to test. Note this is an absolute upper bound,
+as we stop when all coefficients are 0.</p></li>
+<li><p><strong>path_multiplier</strong> (<em>float</em><em> or </em><em>None</em>) – Multiplicative factor (<span class="math notranslate nohighlight">\(1 + \epsilon\)</span>) to increase
+the penalty parameter over the path
+If None, it will be computed from n_lambdas.
+If not None, it will prevail over the value of n_lambdas.</p></li>
+<li><p><strong>M</strong> (<em>float</em><em>, </em><em>default=10.0</em>) – Hierarchy parameter.</p></li>
+<li><p><strong>optim</strong> (<em>torch optimizer</em><em> or </em><em>tuple of 2 optimizers</em><em>, </em><em>default=None</em>) – Optimizer for initial training and path computation.
+Default is Adam(lr=1e-3), SGD(lr=1e-3, momentum=0.9).</p></li>
+<li><p><strong>n_iters</strong> (<em>int</em><em> or </em><em>pair of int</em><em>, </em><em>default=</em><em>(</em><em>3000</em><em>, </em><em>400</em><em>)</em>) – Maximum number of training epochs for initial training and path computation.
+This is an upper-bound on the effective number of epochs, since the model
+uses early stopping.</p></li>
+<li><p><strong>patience</strong> (<em>int</em><em> or </em><em>pair of int</em><em>, </em><em>default=10</em>) – Number of epochs to wait without improvement during early stopping.</p></li>
+<li><p><strong>val_size</strong> (<em>float</em><em>, </em><em>default=0.1</em>) – Proportion of data to use for early stopping.</p></li>
+<li><p><strong>device</strong> (<em>torch device</em><em>, </em><em>default=None</em>) – Device on which to train the model using PyTorch.
+Default: GPU if available else CPU</p></li>
+<li><p><strong>random_state</strong> – Random state for cross-validation</p></li>
+<li><p><strong>torch_seed</strong> – Torch state for model random initialization</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="lassonet.LassoNetRegressor.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_dims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(100)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lambda_</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_lambdas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_multiplier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">M</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_iters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(3000,</span> <span class="pre">400)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">torch_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lassonet.LassoNetRegressor.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hidden_dims</strong> (<em>tuple of int</em><em>, </em><em>default=</em><em>(</em><em>100</em><em>,</em><em>)</em>) – Shape of the hidden layers.</p></li>
+<li><p><strong>lambda_</strong> (<em>None</em><em> or </em><em>float</em><em>, </em><em>default=None</em>) – Regularization parameter. Not needed for cross-validation estimators.</p></li>
+<li><p><strong>eps</strong> (<em>float</em><em>, </em><em>default=1e-2</em>) – First value on the path. The corresponding <cite>lambda_</cite> will be lambda_max * eps</p></li>
+<li><p><strong>n_lambdas</strong> (<em>int</em><em>, </em><em>default=100</em>) – Number of lambda values to test. Note this is an absolute upper bound,
+as we stop when all coefficients are 0.</p></li>
+<li><p><strong>path_multiplier</strong> (<em>float</em><em> or </em><em>None</em>) – Multiplicative factor (<span class="math notranslate nohighlight">\(1 + \epsilon\)</span>) to increase
+the penalty parameter over the path
+If None, it will be computed from n_lambdas.
+If not None, it will prevail over the value of n_lambdas.</p></li>
+<li><p><strong>M</strong> (<em>float</em><em>, </em><em>default=10.0</em>) – Hierarchy parameter.</p></li>
+<li><p><strong>optim</strong> (<em>torch optimizer</em><em> or </em><em>tuple of 2 optimizers</em><em>, </em><em>default=None</em>) – Optimizer for initial training and path computation.
+Default is Adam(lr=1e-3), SGD(lr=1e-3, momentum=0.9).</p></li>
+<li><p><strong>n_iters</strong> (<em>int</em><em> or </em><em>pair of int</em><em>, </em><em>default=</em><em>(</em><em>3000</em><em>, </em><em>400</em><em>)</em>) – Maximum number of training epochs for initial training and path computation.
+This is an upper-bound on the effective number of epochs, since the model
+uses early stopping.</p></li>
+<li><p><strong>patience</strong> (<em>int</em><em> or </em><em>pair of int</em><em>, </em><em>default=10</em>) – Number of epochs to wait without improvement during early stopping.</p></li>
+<li><p><strong>val_size</strong> (<em>float</em><em>, </em><em>default=0.1</em>) – Proportion of data to use for early stopping.</p></li>
+<li><p><strong>device</strong> (<em>torch device</em><em>, </em><em>default=None</em>) – Device on which to train the model using PyTorch.
+Default: GPU if available else CPU</p></li>
+<li><p><strong>random_state</strong> – Random state for cross-validation</p></li>
+<li><p><strong>torch_seed</strong> – Torch state for model random initialization</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#lassonet.LassoNetRegressor.__init__" title="lassonet.LassoNetRegressor.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(*[, hidden_dims, lambda_, eps, …])</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">param hidden_dims</dt>
+<dd class="field-odd"><p>Shape of the hidden layers.</p>
+</dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="index.html#lassonet.LassoNetRegressor.fit" title="lassonet.LassoNetRegressor.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X, y)</p></td>
+<td><p>Train the model.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="index.html#lassonet.LassoNetRegressor.get_params" title="lassonet.LassoNetRegressor.get_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code></a>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load</span></code>(state_dict)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">path</span></code>(X, y[, lambda_])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict</span></code>(X)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="index.html#lassonet.LassoNetRegressor.score" title="lassonet.LassoNetRegressor.score"><code class="xref py py-obj docutils literal notranslate"><span class="pre">score</span></code></a>(X, y[, sample_weight])</p></td>
+<td><p>Return the coefficient of determination <span class="math notranslate nohighlight">\(R^2\)</span> of the prediction.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="index.html#lassonet.LassoNetRegressor.set_params" title="lassonet.LassoNetRegressor.set_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code></a>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="index.html#lassonet.LassoNetRegressor.coef_" title="lassonet.LassoNetRegressor.coef_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">coef_</span></code></a></p></td>
+<td><p>Coefficients of the skip layer This allows to use <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.SelectFromModel.html#sklearn.feature_selection.SelectFromModel">sklearn.feature_selection.SelectFromModel</a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">criterion</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">last_layer_bias</span></code></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">LassoNet</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">lassonet.LassoNetRegressor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lassonet.LassoNetClassifier.html">lassonet.LassoNetClassifier</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Welcome to LassoNet’s documentation!</a></li>
+      <li>Next: <a href="lassonet.LassoNetClassifier.html" title="next chapter">lassonet.LassoNetClassifier</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, Louis Abraham, Ismael Lemhadri.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/lassonet.LassoNetRegressor.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

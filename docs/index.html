@@ -1,179 +1,7 @@
-<style type="text/css">
-  body {
-    font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
-    font-weight: 300;
-    font-size: 18px;
-    margin-left: auto;
-    margin-right: auto;
-    width: 1100px;
-  }
-
-  h1 {
-    font-weight: 300;
-  }
-
-  .disclaimerbox {
-    background-color: #eee;
-    border: 1px solid #eeeeee;
-    border-radius: 10px;
-    -moz-border-radius: 10px;
-    -webkit-border-radius: 10px;
-    padding: 20px;
-  }
-
-  video.header-vid {
-    height: 140px;
-    border: 1px solid black;
-    border-radius: 10px;
-    -moz-border-radius: 10px;
-    -webkit-border-radius: 10px;
-  }
-
-  img.header-img {
-    height: 140px;
-    border: 1px solid black;
-    border-radius: 10px;
-    -moz-border-radius: 10px;
-    -webkit-border-radius: 10px;
-  }
-
-  img.rounded {
-    border: 1px solid #eeeeee;
-    border-radius: 10px;
-    -moz-border-radius: 10px;
-    -webkit-border-radius: 10px;
-  }
-
-  a:link,
-  a:visited {
-    color: #1367a7;
-    text-decoration: none;
-  }
-
-  a:hover {
-    color: #208799;
-  }
-
-  td.dl-link {
-    height: 160px;
-    text-align: center;
-    font-size: 22px;
-  }
-
-  .layered-paper-big {
-    /* modified from: http://css-tricks.com/snippets/css/layered-paper/ */
-    box-shadow:
-      0px 0px 1px 1px rgba(0, 0, 0, 0.35),
-      /* The top layer shadow */
-      5px 5px 0 0px #fff,
-      /* The second layer */
-      5px 5px 1px 1px rgba(0, 0, 0, 0.35),
-      /* The second layer shadow */
-      10px 10px 0 0px #fff,
-      /* The third layer */
-      10px 10px 1px 1px rgba(0, 0, 0, 0.35),
-      /* The third layer shadow */
-      15px 15px 0 0px #fff,
-      /* The fourth layer */
-      15px 15px 1px 1px rgba(0, 0, 0, 0.35),
-      /* The fourth layer shadow */
-      20px 20px 0 0px #fff,
-      /* The fifth layer */
-      20px 20px 1px 1px rgba(0, 0, 0, 0.35),
-      /* The fifth layer shadow */
-      25px 25px 0 0px #fff,
-      /* The fifth layer */
-      25px 25px 1px 1px rgba(0, 0, 0, 0.35);
-    /* The fifth layer shadow */
-    margin-left: 10px;
-    margin-right: 45px;
-  }
-
-  .paper-big {
-    /* modified from: http://css-tricks.com/snippets/css/layered-paper/ */
-    box-shadow:
-      0px 0px 1px 1px rgba(0, 0, 0, 0.35);
-    /* The top layer shadow */
-
-    margin-left: 10px;
-    margin-right: 45px;
-  }
-
-
-  .layered-paper {
-    /* modified from: http://css-tricks.com/snippets/css/layered-paper/ */
-    box-shadow:
-      0px 0px 1px 1px rgba(0, 0, 0, 0.35),
-      /* The top layer shadow */
-      5px 5px 0 0px #fff,
-      /* The second layer */
-      5px 5px 1px 1px rgba(0, 0, 0, 0.35),
-      /* The second layer shadow */
-      10px 10px 0 0px #fff,
-      /* The third layer */
-      10px 10px 1px 1px rgba(0, 0, 0, 0.35);
-    /* The third layer shadow */
-    margin-top: 5px;
-    margin-left: 10px;
-    margin-right: 30px;
-    margin-bottom: 5px;
-  }
-
-  .vert-cent {
-    position: relative;
-    top: 50%;
-    transform: translateY(-50%);
-  }
-
-  hr {
-    border: 0;
-    height: 1px;
-    background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
-  }
-
-  .center {
-    margin: auto;
-    text-align: center;
-  }
-
-  img.center {
-    display: block;
-
-  }
-
-  h1 {
-    text-align: center;
-    font-size: 42px
-  }
-
-  #authors {
-    font-size: 24px;
-    width: 800px;
-  }
-
-  #authors td {
-    width: 100px;
-  }
-
-  #links td {
-    font-size: 24px;
-    width: 130px;
-  }
-
-
-  iframe {
-    width: 792;
-    height: 328;
-    display: block;
-    border-style: none;
-    margin: 0 auto;
-
-  }
-</style>
-
 <html>
 
 <head>
+  <link rel="stylesheet" href="style.css">
   <title>LassoNet: Neural Networks with Feature Sparsity</title>
   <!-- <meta property="og:image" content="" /> -->
   <meta property="og:title" content="LassoNet: Neural Networks with Feature Sparsity " />
@@ -208,6 +36,9 @@
         <a href='https://github.com/ilemhadri/lassonet'>[GitHub]</a>
       </td>
       <td>
+        <a href='/api'>[Docs]</a>
+      </td>
+      <td>
         <a href='https://ismael.lemhadri.org/papers/pdf/lassonet_poster.pdf'>[Poster]</a>
       </td>
       <td>
@@ -220,8 +51,17 @@
 
   <h1>Abstract</h1>
 
-<p>Much work has been done recently to make neural networks more interpretable, and one obvious approach is to arrange for the network to use only a subset of the available features. In linear models, Lasso (or L1-regularized) regression assigns zero weights to the most irrelevant or redundant features, and is widely used in data science. However the Lasso only applies to linear models. Here we introduce LassoNet, a neural network framework with global feature selection. Our approach enforces a hierarchy: specifically a feature can participate in a hidden unit only if its linear representative is active. Unlike other approaches to feature selection for neural nets, our method uses a modified objective function with constraints, and so integrates feature selection with the parameter learning directly. As a result, it delivers an entire regularization path of solutions with a range of feature sparsity. On systematic experiments, LassoNet significantly outperforms state-of-the-art methods for feature selection and regression. The LassoNet method uses projected proximal gradient descent, and generalizes directly to deep networks. It can be implemented by adding just a few lines of code to a standard neural network.</p>
-
+  <p>Much work has been done recently to make neural networks more interpretable, and one obvious approach is to arrange
+    for the network to use only a subset of the available features. In linear models, Lasso (or L1-regularized)
+    regression assigns zero weights to the most irrelevant or redundant features, and is widely used in data science.
+    However the Lasso only applies to linear models. Here we introduce LassoNet, a neural network framework with global
+    feature selection. Our approach enforces a hierarchy: specifically a feature can participate in a hidden unit only
+    if its linear representative is active. Unlike other approaches to feature selection for neural nets, our method
+    uses a modified objective function with constraints, and so integrates feature selection with the parameter learning
+    directly. As a result, it delivers an entire regularization path of solutions with a range of feature sparsity. On
+    systematic experiments, LassoNet significantly outperforms state-of-the-art methods for feature selection and
+    regression. The LassoNet method uses projected proximal gradient descent, and generalizes directly to deep networks.
+    It can be implemented by adding just a few lines of code to a standard neural network.</p>
 
   <hr>
 

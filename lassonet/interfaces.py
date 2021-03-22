@@ -31,7 +31,7 @@ class HistoryItem:
     state_dict: dict
     val_loss: float
     regularization: float
-    selected: torch.tensor
+    selected: torch.BoolTensor
     n_iters: int
 
 
@@ -53,21 +53,20 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         random_state=None,
         torch_seed=None,
     ):
-        """Main training loop for LassoNet
-
+        """
         Parameters
         ----------
         hidden_dims : tuple of int, default=(100,)
             Shape of the hidden layers.
-        lambda_ : None or float, default=None
+        lambda\\_ : None or float, default=None
             Regularization parameter. Not needed for cross-validation estimators.
         eps : float, default=1e-2
-            First value on the path. The corresponding lambda_ will be lambda_max * eps
+            First value on the path. The corresponding `lambda_` will be lambda_max * eps
         n_lambdas : int, default=100
             Number of lambda values to test. Note this is an absolute upper bound,
             as we stop when all coefficients are 0.
         path_multiplier : float or None
-            Multiplicative factor (`1 + \\epsilon`) to increase
+            Multiplicative factor (:math:`1 + \\epsilon`) to increase
             the penalty parameter over the path
             If None, it will be computed from n_lambdas.
             If not None, it will prevail over the value of n_lambdas.
@@ -131,20 +130,20 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
     @abstractmethod
     def _convert_y(self, y) -> torch.TensorType:
         """Convert y to torch tensor"""
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def _output_shape(self, y):
         """Number of model outputs"""
-        pass
+        raise NotImplementedError
 
     @abstractclsattr
     def last_layer_bias(cls):
-        pass
+        raise NotImplementedError
 
     @abstractclsattr
     def criterion(cls):
-        pass
+        raise NotImplementedError
 
     def _init_model(self, X, y):
         """Create a torch model"""
@@ -166,10 +165,9 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         return X, y
 
     def fit(self, X, y):
-        """Train the model
-        Returns
-        -------
-        TODO
+        """Train the model.
+        This method cannot be called if you did not provide a value of lambda\\_
+        and should be reserved for production environments.
         """
         assert self.lambda_ is not None, "You cannot call fit without providing lambda_"
         self.path(X, y, self.lambda_)
@@ -224,6 +222,14 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
     @abstractmethod
     def predict(self, X):
         pass
+
+    @property
+    def coef_(self):
+        """Coefficients of the skip layer
+        This allows to use `sklearn.feature_selection.SelectFromModel \
+<https://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.SelectFromModel.html#sklearn.feature_selection.SelectFromModel>`_
+        """
+        return self.model.skip.weight.cpu().numpy()
 
     def path(self, X, y, lambda_=None) -> List[HistoryItem]:
         # TODO: disable save_state
@@ -321,6 +327,8 @@ class LassoNetRegressor(
     MultiOutputMixin,
     BaseLassoNet,
 ):
+    """Use LassoNet as regressor"""
+
     def _convert_y(self, y):
         y = torch.FloatTensor(y).to(self.device)
         if len(y.shape) == 1:
@@ -345,6 +353,8 @@ class LassoNetClassifier(
     ClassifierMixin,
     BaseLassoNet,
 ):
+    """Use LassoNet as classifier"""
+
     def _convert_y(self, y) -> torch.TensorType:
         return torch.LongTensor(y).to(self.device)
 

@@ -16,14 +16,14 @@ setup(
     long_description=read("README.md"),
     long_description_content_type="text/markdown",
     url="https://github.com/ilemhadri/lassonet",
-    packages=["lassonet"],
-    install_requires=["torch", "scikit-learn"],
-    tests_require=["pytest"],
-    python_requires=">=3.7",
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
         "Operating System :: OS Independent",
     ],
+    packages=["lassonet"],
+    install_requires=["torch", "scikit-learn"],
+    tests_require=["pytest"],
+    python_requires=">=3.7",
 )

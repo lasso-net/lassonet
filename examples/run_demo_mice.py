@@ -3,8 +3,11 @@
 
 """
 Lassonet Demo Notebook - PyTorch
-# This notebook illustrates the Lassonet method for feature selection on a classification task.
-# We will run Lassonet over [the Mice Dataset](https://archive.ics.uci.edu/ml/datasets/Mice%20Protein%20Expression). This dataset consists of protein expression levels measured in the cortex of normal and trisomic mice who had been exposed to different experimental conditions. Each feature is the expression level of one protein.
+
+This notebook illustrates the Lassonet method for
+feature selection on a classification task.
+We will run Lassonet over [the Mice Dataset](https://archive.ics.uci.edu/ml/datasets/Mice%20Protein%20Expression).
+This dataset consists of protein expression levels measured in the cortex of normal and trisomic mice who had been exposed to different experimental conditions. Each feature is the expression level of one protein.
 """
 # First we import a few necessary packages
 
