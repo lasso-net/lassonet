@@ -1,7 +1,18 @@
 Welcome to LassoNet's documentation!
 ====================================
 
-`Go to main website </>`_
+`Go to main website <../>`_
+
+Installation
+------------
+
+::
+
+   pip install lassonet
+
+
+API
+---
 
 .. autosummary::
      :toctree:
