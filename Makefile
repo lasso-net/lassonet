@@ -1,3 +1,10 @@
+pypi: dist
+	twine upload dist/*
+	
+dist:
+	-rm dist/*
+	python3 setup.py sdist bdist_wheel
+
 docs:
 	cd sphinx_docs && $(MAKE) html
 	- rm -rf docs/api
