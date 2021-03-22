@@ -4,4 +4,5 @@ __pycache__
 .pytest_cache
 *.egg-info/
 .DS_Store
-_*/
+sphinx_docs/_*/
+docs/api/_sources
