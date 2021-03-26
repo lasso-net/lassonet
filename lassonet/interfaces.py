@@ -27,7 +27,7 @@ def abstractclsattr(f):
 
 @dataclass
 class HistoryItem:
-    alpha: float
+    lambda_: float
     state_dict: dict
     val_loss: float
     regularization: float
@@ -180,7 +180,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         X_val,
         y_val,
         epochs,
-        alpha,
+        lambda_,
         optimizer,
         patience=None,
     ):
@@ -191,7 +191,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                 model.eval()
                 return (
                     self.criterion(model(X_val), y_val).item()
-                    + alpha * model.regularization().item()
+                    + lambda_ * model.regularization().item()
                 )
 
         best_obj = obj_fun()
@@ -207,8 +207,8 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
 
             model.train()
             optimizer.step(closure)
-            if alpha:
-                model.prox(lambda_=alpha, M=self.M)
+            if lambda_:
+                model.prox(lambda_=lambda_, M=self.M)
 
             obj = obj_fun()
             if obj < best_obj:
@@ -217,7 +217,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             if patience is not None and epochs_since_best_obj == patience:
                 break
             epochs_since_best_obj += 1
-        return alpha, epoch + 1, obj
+        return lambda_, epoch + 1, obj
 
     @abstractmethod
     def predict(self, X):
@@ -233,16 +233,17 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
 
     def path(self, X, y, lambda_=None) -> List[HistoryItem]:
         # TODO: disable save_state
+        # TODO: doc
         X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=self.val_size)
         X_train, y_train = self._cast_input(X_train, y_train)
         X_val, y_val = self._cast_input(X_val, y_val)
 
         hist = []
 
-        def register(hist, alpha, n_iters, val_loss):
+        def register(hist, lambda_, n_iters, val_loss):
             hist.append(
                 HistoryItem(
-                    alpha=alpha,
+                    lambda_=lambda_,
                     state_dict=self.model.cpu_state_dict(),
                     val_loss=val_loss,
                     regularization=self.model.regularization().item(),
@@ -261,24 +262,24 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                 y_train,
                 X_val,
                 y_val,
-                alpha=0,
+                lambda_=0,
                 epochs=self.n_iters_init,
                 optimizer=self.optim_init(self.model.parameters()),
                 patience=self.patience_init,
             ),
         )
         n_samples, _ = X.shape
-        alpha_max = (
+        lambda_max = (
             torch.norm(torch.tensor(X.T.dot(y)), p=2, dim=0).max().item() / n_samples
         )
-        alpha = alpha_max * self.eps
+        current_lambda = lambda_max * self.eps
         if lambda_ is not None:
-            alpha_max = lambda_
+            lambda_max = lambda_
         optimizer = self.optim_path(self.model.parameters())
 
         while self.model.selected_count() != 0:
-            alpha *= self.path_multiplier
-            if alpha > alpha_max:
+            current_lambda *= self.path_multiplier
+            if current_lambda > lambda_max:
                 break
             register(
                 hist,
@@ -287,13 +288,13 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                     y_train,
                     X_val,
                     y_val,
-                    alpha=alpha,
+                    lambda_=current_lambda,
                     epochs=self.n_iters_path,
                     optimizer=optimizer,
                     patience=self.patience_path,
                 ),
             )
-        if lambda_ is not None and alpha != lambda_:
+        if lambda_ is not None and current_lambda != lambda_:
             register(
                 hist,
                 *self._train(
@@ -301,7 +302,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                     y_train,
                     X_val,
                     y_val,
-                    alpha=alpha,
+                    lambda_=current_lambda,
                     optimizer=optimizer,
                     patience=self.patience,
                 ),
