@@ -6,7 +6,7 @@ from .prox import inplace_prox
 
 
 class LassoNet(nn.Module):
-    def __init__(self, *dims, last_layer_bias=True):
+    def __init__(self, *dims):
         """
         first dimension is input
         last dimension is output
@@ -17,8 +17,6 @@ class LassoNet(nn.Module):
         self.layers = nn.ModuleList(
             [nn.Linear(dims[i], dims[i + 1]) for i in range(len(dims) - 1)]
         )
-        if not last_layer_bias:
-            self.layers[-1].bias = None
         self.skip = nn.Linear(dims[0], dims[-1], bias=False)
 
     def forward(self, inp):

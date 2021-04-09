@@ -17,8 +17,6 @@ def prox(v, u, lambda_, lambda_bar, M):
     u has shape (k,) or (k, batches)
 
     supports GPU tensors
-
-    we want |u|_inf <= ||v||_2 for every batch
     """
     onedim = len(v.shape) == 1
     if onedim:
