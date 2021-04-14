@@ -1,9 +1,50 @@
+<!DOCTYPE html>
 <html>
 
 <head>
   <link rel="stylesheet" href="style.css">
   <title>LassoNet: Neural Networks with Feature Sparsity</title>
   <!-- <meta property="og:image" content="" /> -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.2/dist/katex.min.css"
+    integrity="sha384-Cqd8ihRLum0CCg8rz0hYKPoLZ3uw+gES2rXQXycqnL5pgVQIflxAUDS7ZSjITLb5" crossorigin="anonymous">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.2/dist/katex.min.js"
+    integrity="sha384-1Or6BdeNQb0ezrmtGeqQHFpppNd7a/gw29xeiSikBbsb44xu3uAo8c7FwbF5jhbd" crossorigin="anonymous">
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.2/dist/contrib/auto-render.min.js"
+    integrity="sha384-vZTG03m+2yp6N6BNi5iM4rW4oIwk5DfcNdFfxkk9ZWpDriOkXX8voJBFrAO7MpVl" crossorigin="anonymous">
+  </script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [{
+            left: '$$',
+            right: '$$',
+            display: true
+          },
+          {
+            left: '$',
+            right: '$',
+            display: false
+          },
+          {
+            left: '\\(',
+            right: '\\)',
+            display: false
+          },
+          {
+            left: '\\[',
+            right: '\\]',
+            display: true
+          }
+        ],
+        // • rendering keys, e.g.:
+        throwOnError: false
+      });
+    });
+  </script>
+
   <meta property="og:title" content="LassoNet: Neural Networks with Feature Sparsity " />
 </head>
 
@@ -33,7 +74,7 @@
         <a href='https://arxiv.org/pdf/1907.12207.pdf'>[Paper]</a>
       </td>
       <td>
-        <a href='https://github.com/ilemhadri/lassonet'>[GitHub]</a>
+        <a href='https://github.com/ilemhadri/lassonet'>[Code]</a>
       </td>
       <td>
         <a href='./api'>[Docs]</a>
@@ -47,25 +88,33 @@
     </tr>
   </table>
 
+  <img class="center" src="fig1.png" height="300px"></img>
+
+  <p>
+    <ul>
+      <li>Much work has been done recently to make neural networks more interpretable.</li>
+      <li>LassoNet delivers interpretability by arranging for the network to use only a subset of the available
+        features, that is the resulting network is “feature sparse”</li>
+      <li> This is achieved not by post-hoc analysis of a standard neural network but is built into objective function
+        itself:
+        <ul>
+          <li>Skip layer connections are added to the network with an L1 penalty on its weights.</li>
+          <li>Further: the weight for each feature j for this layer acts as an upper bound for all hidden layer weights
+            involving that feature</li>
+        </ul>
+      </li>
+      <li> The result is an entire path of network solutions, with varying amounts of feature sparsity. This is
+        analogous to
+        the lasso solution path for linear regression
+      </li>
+    </ul>
+  </p>
+
+  <hr>
+
   <h1>LassoNet in 2 minutes</h1>
   <iframe src="https://drive.google.com/file/d/159LPc6EZDKq79rWTXQgfBlTt-CaPoO8k/preview" width="640"
     height="480"></iframe>
-
-  <h1>Abstract</h1>
-
-  <p>Much work has been done recently to make neural networks more interpretable, and one obvious approach is to arrange
-    for the network to use only a subset of the available features. In linear models, Lasso (or L1-regularized)
-    regression assigns zero weights to the most irrelevant or redundant features, and is widely used in data science.
-    However the Lasso only applies to linear models. Here we introduce LassoNet, a neural network framework with global
-    feature selection. Our approach enforces a hierarchy: specifically a feature can participate in a hidden unit only
-    if its linear representative is active. Unlike other approaches to feature selection for neural nets, our method
-    uses a modified objective function with constraints, and so integrates feature selection with the parameter learning
-    directly. As a result, it delivers an entire regularization path of solutions with a range of feature sparsity. On
-    systematic experiments, LassoNet significantly outperforms state-of-the-art methods for feature selection and
-    regression. The LassoNet method uses projected proximal gradient descent, and generalizes directly to deep networks.
-    It can be implemented by adding just a few lines of code to a standard neural network.</p>
-
-  <img class="center" src="fig1.png" height="300px"></img>
 
   <hr>
 
@@ -74,6 +123,23 @@
   <pre style="text-align: center;">pip install lassonet</pre>
 
   <hr>
+  <div>
+    <h1>Tips</h1>
+
+    LassoNet sometimes require fine tuning. For optimal performance, consider:
+    <ul>
+      <li>standardizing the inputs</li>
+      <li>making sure that the initial dense model (with $\lambda = 0$) has trained well, before starting the LassoNet
+        regularization
+        path. This may involve hyper-parameter tuning, choosing the right optimizer, and so on. If the dense model is
+        underperforming, it is likely that the sparser models will as well.</li>
+      <li>making sure the stepsize over the $\lambda$ path is not too large. By default, the stepsize runs in geometric
+        increments until there is no feature left.
+      </li>
+    </ul>
+
+  </div>
+
 
   <div>
     <h1>Intro video</h1>
@@ -92,7 +158,8 @@
 
   <div>
     <h1>Citation</h1>
-    Please use the citation below:
+    The algorithms and method used in this package came primarily out of research in Rob Tibshirani's lab at Stanford
+    University. If you use LassoNet in your research we would appreciate a citation to the paper:
     <pre>
       @article{lemhadri2019neural,
         title={LassoNet: Neural Networks with Feature Sparsity},
