@@ -91,21 +91,22 @@
   <img class="center" src="fig1.png" height="300px"></img>
 
   <p>
+    <b>LassoNet</b> is a method for feature selection in neural networks, to enhance interpretability of the final
+    network.
     <ul>
-      <li>Much work has been done recently to make neural networks more interpretable.</li>
-      <li>LassoNet delivers interpretability by arranging for the network to use only a subset of the available
-        features, that is the resulting network is “feature sparse”</li>
-      <li> This is achieved not by post-hoc analysis of a standard neural network but is built into objective function
-        itself:
+      <li>It uses a novel objective function and learning algorithm, that encourage the network to use only a subset of
+        the available input features, that is the resulting network is <b>"feature sparse"</b></li>
+      <li> This is achieved not by post-hoc analysis of a standard neural network but is <b>built into objective
+          function
+          itself</b>:
         <ul>
-          <li>Skip layer connections are added to the network with an L1 penalty on its weights.</li>
-          <li>Further: the weight for each feature j for this layer acts as an upper bound for all hidden layer weights
-            involving that feature</li>
+          <li>Input to output (skip layer) connections are added to the network with an L1 penalty on its weights</li>
+          <li>The weight for each feature in this layer acts as an upper bound for all hidden layer weights involving
+            that feature</li>
         </ul>
       </li>
-      <li> The result is an entire path of network solutions, with varying amounts of feature sparsity. This is
-        analogous to
-        the lasso solution path for linear regression
+      <li> The result is an <b>entire path of network solutions</b>, with varying amounts of feature sparsity. This is
+        analogous to the lasso solution path for linear regression
       </li>
     </ul>
   </p>
