@@ -1,7 +1,7 @@
 # Feature Selection in Neural Networks
 
 ## [LassoNet website](http://louisabraham.github.io/lassonet)
-The website contains links to the paper as well as documentation/slides.
+[The website](http://louisabraham.github.io/lassonet) contains links to the paper as well as documentation/slides.
 
 ### Tips
 LassoNet sometimes require fine tuning. For optimal performance, consider
