@@ -411,6 +411,47 @@ class LassoNetClassifier(
 
 
 def lassonet_path(X, y, task, **kwargs):
+    """
+    Parameters
+    ----------
+    X : array-like of shape (n_samples, n_features)
+        Training data
+    y : array-like of shape (n_samples,) or (n_samples, n_outputs)
+        Target values
+    task : str, must be "classification" or "regression"
+        Task
+    hidden_dims : tuple of int, default=(100,)
+        Shape of the hidden layers.
+    eps_start : float, default=1
+        Sets lambda_start such that it has a strength comparable to the
+        loss of the unconstrained model multiplied by eps_start.
+    lambda_start : float, default=None
+        First value on the path.
+    path_multiplier : float or None
+        Multiplicative factor (:math:`1 + \\epsilon`) to increase
+        the penalty parameter over the path
+    M : float, default=10.0
+        Hierarchy parameter.
+    optim : torch optimizer or tuple of 2 optimizers, default=None
+        Optimizer for initial training and path computation.
+        Default is Adam(lr=1e-3), SGD(lr=1e-3, momentum=0.9).
+    n_iters : int or pair of int, default=(1000, 100)
+        Maximum number of training epochs for initial training and path computation.
+        This is an upper-bound on the effective number of epochs, since the model
+        uses early stopping.
+    patience : int or pair of int, default=10
+        Number of epochs to wait without improvement during early stopping.
+    val_size : float, default=0.1
+        Proportion of data to use for early stopping.
+    device : torch device, default=None
+        Device on which to train the model using PyTorch.
+        Default: GPU if available else CPU
+    verbose : int, default=0
+    random_state
+        Random state for cross-validation
+    torch_seed
+        Torch state for model random initialization
+    """
     if task == "classification":
         model = LassoNetClassifier(**kwargs)
     elif task == "regression":
