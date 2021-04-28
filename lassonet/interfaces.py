@@ -408,3 +408,13 @@ class LassoNetClassifier(
         if isinstance(X, np.ndarray):
             ans = ans.cpu().numpy()
         return ans
+
+
+def lassonet_path(X, y, task, **kwargs):
+    if task == "classification":
+        model = LassoNetClassifier(**kwargs)
+    elif task == "regression":
+        model = LassoNetClassifier(**kwargs)
+    else:
+        raise ValueError('task must be "classification" or "regression"')
+    return model.path(X, y)
