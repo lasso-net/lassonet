@@ -25,5 +25,5 @@ setup(
     packages=["lassonet"],
     install_requires=["torch", "scikit-learn"],
     tests_require=["pytest"],
-    python_requires=">=3.7",
+    python_requires=">=3.6.5",
 )
