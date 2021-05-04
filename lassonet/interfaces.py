@@ -194,7 +194,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             model.train()
             optimizer.step(closure)
             if lambda_:
-                model.prox(lambda_=lambda_, M=self.M)
+                model.prox(lambda_=lambda_ * optimizer.param_groups[0]['lr'], M=self.M)
 
             obj = validation_loss()
             if obj < self.tol * best_obj:
