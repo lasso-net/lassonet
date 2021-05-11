@@ -20,8 +20,8 @@ pip install lassonet
 Our plan is to add more functionality that help users understand the important features in neural networks.
 
 
-### [LassoNet website: www.lassonet.ml](http://lassonet.ml)
-The website contains many useful references, including the paper, live talks and additional documentation.
+### Website
+LassoNet's website is [lassonet.ml](http://lassonet.ml). It contains many useful references, including the paper, live talks and additional documentation.
 
 ### Tips
 
