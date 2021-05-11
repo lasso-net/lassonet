@@ -2,6 +2,21 @@ import matplotlib.pyplot as plt
 
 
 def plot_path(model, path, X_test, y_test):
+    """
+    Plot the evolution of the model on the path, namely:
+    - lambda
+    - number of selected variables
+    - score
+
+
+    Parameters
+    ==========
+    model : LassoNetClassifier or LassoNetRegressor
+    path
+        output of model.path
+    X_test : array-like
+    y_test : array-like
+    """
     n_selected = []
     score = []
     lambda_ = []
@@ -32,5 +47,3 @@ def plot_path(model, path, X_test, y_test):
     plt.xlabel("lambda")
     plt.xscale("log")
     plt.ylabel("number of selected features")
-
-    plt.savefig("miceprotein.png")

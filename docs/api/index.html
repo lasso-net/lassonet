@@ -297,7 +297,21 @@ possible to update each component of a nested object.</p>
 <dl class="py function">
 <dt id="lassonet.plot_path">
 <code class="sig-prename descclassname"><span class="pre">lassonet.</span></code><code class="sig-name descname"><span class="pre">plot_path</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lassonet.plot_path" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Plot the evolution of the model on the path, namely:
+- lambda
+- number of selected variables
+- score</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="#lassonet.LassoNetClassifier" title="lassonet.LassoNetClassifier"><em>LassoNetClassifier</em></a><em> or </em><a class="reference internal" href="#lassonet.LassoNetRegressor" title="lassonet.LassoNetRegressor"><em>LassoNetRegressor</em></a>) – </p></li>
+<li><p><strong>path</strong> – output of model.path</p></li>
+<li><p><strong>X_test</strong> (<em>array-like</em>) – </p></li>
+<li><p><strong>y_test</strong> (<em>array-like</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py function">
 <dt id="lassonet.lassonet_path">
