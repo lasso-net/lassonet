@@ -21,11 +21,10 @@ API
    :members:
    :inherited-members:
 
-|
-
 .. autoclass:: lassonet.LassoNetClassifier
    :members:
    :inherited-members:
 
+.. autofunction:: lassonet.plot_path
 
-
+.. autofunction:: lassonet.lassonet_path
