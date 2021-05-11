@@ -393,7 +393,7 @@ class LassoNetClassifier(
         y_bin[torch.arange(n), y] = True
         return LassoNetRegressor._lambda_max(X, y_bin)
 
-    criterion = torch.nn.CrossEntropyLoss(reduction="mean")
+    criterion = .5 * torch.nn.CrossEntropyLoss(reduction="mean")
 
     def predict(self, X):
         with torch.no_grad():
