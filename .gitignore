@@ -8,3 +8,4 @@ sphinx_docs/_*/
 docs/api/_sources
 dist/
 build/
+/*.png
