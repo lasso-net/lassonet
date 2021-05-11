@@ -1,3 +1,5 @@
+[![PyPI version](https://badge.fury.io/py/lassonet.svg)](https://badge.fury.io/py/lassonet)
+
 # LassoNet
 
 This project is about performing feature selection in neural networks.
