@@ -11,7 +11,7 @@ def sign_binary(x):
     return torch.where(x >= 0, ones, -ones)
 
 
-def prox(v, u, lambda_, lambda_bar, M):
+def prox(v, u, *, lambda_, lambda_bar, M):
     """
     v has shape (m,) or (m, batches)
     u has shape (k,) or (k, batches)
