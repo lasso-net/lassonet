@@ -21,7 +21,7 @@ Our plan is to add more functionality that help users understand the important f
 
 
 ### Website
-LassoNet's website is [https://lassonet.ml](https://lassonet.ml). It contains many useful references, including the paper, live talks and additional documentation.
+LassoNet's website is [https://lassonet.ml](https://lassonet.ml). It contains many useful references including the paper, live talks and additional documentation.
 
 ### Tips
 
