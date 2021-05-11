@@ -23,7 +23,7 @@ def plot_path(model, path, X_test, y_test):
     for save in path:
         model.load(save.state_dict)
         n_selected.append(save.selected.sum())
-        score.append(model.criterion(model.predict(X_test), y_test))
+        score.append(model.score(X_test, y_test))
         lambda_.append(save.lambda_)
 
     plt.figure(figsize=(12, 12))
