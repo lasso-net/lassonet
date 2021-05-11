@@ -194,7 +194,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             model.train()
             optimizer.step(closure)
             if lambda_:
-                model.prox(lambda_=lambda_, M=self.M)
+                model.prox(lambda_=lambda_ * optimizer.param_groups[0]['lr'], M=self.M)
 
             obj = validation_loss()
             if obj < self.tol * best_obj:
@@ -393,7 +393,7 @@ class LassoNetClassifier(
         y_bin[torch.arange(n), y] = True
         return LassoNetRegressor._lambda_max(X, y_bin)
 
-    criterion = torch.nn.CrossEntropyLoss(reduction="mean")
+    criterion = .5 * torch.nn.CrossEntropyLoss(reduction="mean")
 
     def predict(self, X):
         with torch.no_grad():
