@@ -4,11 +4,10 @@ from sklearn.datasets import load_diabetes
 from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import scale
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
 import numpy as np
 
-from lassonet import LassoNetRegressor
+from lassonet import LassoNetRegressor, plot_path
 
 
 dataset = load_diabetes()
@@ -33,39 +32,7 @@ model = LassoNetRegressor(
 )
 path = model.path(X_train, y_train)
 
-n_selected = []
-mse = []
-lambda_ = []
-
-for save in path:
-    model.load(save.state_dict)
-    y_pred = model.predict(X_test)
-    n_selected.append(save.selected.sum())
-    mse.append(mean_squared_error(y_test, y_pred))
-    lambda_.append(save.lambda_)
-
-
-fig = plt.figure(figsize=(12, 12))
-
-plt.subplot(311)
-plt.grid(True)
-plt.plot(n_selected, mse, ".-")
-plt.xlabel("number of selected features")
-plt.ylabel("MSE")
-
-plt.subplot(312)
-plt.grid(True)
-plt.plot(lambda_, mse, ".-")
-plt.xlabel("lambda")
-plt.xscale("log")
-plt.ylabel("MSE")
-
-plt.subplot(313)
-plt.grid(True)
-plt.plot(lambda_, n_selected, ".-")
-plt.xlabel("lambda")
-plt.xscale("log")
-plt.ylabel("number of selected features")
+plot_path(model, path, X_test, y_test)
 
 plt.savefig("diabetes.png")
 
