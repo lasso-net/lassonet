@@ -1,4 +1,15 @@
-# Feature Selection in Neural Networks
+# LassoNet
+
+This project is about performing feature selection in neural networks.
+At the moment, we support fully connected feed-forward neural networks.
+LassoNet is based on the work presented in [this paper]() ([bibtex here for citation]()).
+Here is a link to the promo video:
+
+
+<a href="https://www.youtube.com/watch?v=bbqpUfxA_OA" target="_blank"><img src="https://raw.githubusercontent.com/lasso-net/lassonet/master/docs/images/video_screenshot.png" width="450" alt="Promo Video"/></a>
+
+Our plan is to add more functionality that help users understand the important features in neural networks.
+
 
 ## [LassoNet website: www.lassonet.ml](http://lassonet.ml)
 It contains links to the paper as well as documentation/slides.
