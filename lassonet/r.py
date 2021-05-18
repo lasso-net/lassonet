@@ -1,4 +1,5 @@
 from dataclasses import asdict
+import torch
 from .interfaces import (
     lassonet_path as _lassonet_path,
     LassoNetClassifier,
@@ -22,6 +23,7 @@ def lassonet_eval(X, task, state_dict, **kwargs):
         model = LassoNetRegressor(**kwargs)
     else:
         raise ValueError('task must be "classification" or "regression"')
+    state_dict = {k: torch.tensor(v) for k, v in state_dict.items()}
     model.load(state_dict)
     if hasattr(model, "predict_proba"):
         return model.predict_proba(X)
