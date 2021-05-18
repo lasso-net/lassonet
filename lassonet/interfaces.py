@@ -194,7 +194,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             model.train()
             optimizer.step(closure)
             if lambda_:
-                model.prox(lambda_=lambda_ * optimizer.param_groups[0]['lr'], M=self.M)
+                model.prox(lambda_=lambda_ * optimizer.param_groups[0]["lr"], M=self.M)
 
             obj = validation_loss()
             if obj < self.tol * best_obj:
@@ -455,7 +455,7 @@ def lassonet_path(X, y, task, **kwargs):
     if task == "classification":
         model = LassoNetClassifier(**kwargs)
     elif task == "regression":
-        model = LassoNetClassifier(**kwargs)
+        model = LassoNetRegressor(**kwargs)
     else:
         raise ValueError('task must be "classification" or "regression"')
     return model.path(X, y)
