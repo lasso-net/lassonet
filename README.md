@@ -5,7 +5,7 @@
 This project is about performing feature selection in neural networks.
 At the moment, we support fully connected feed-forward neural networks.
 LassoNet is based on the work presented in [this paper](https://arxiv.org/abs/1907.12207) ([bibtex here for citation](https://github.com/lasso-net/lassonet/blob/master/citation.bib)).
-Here is a link to the promo video:
+Here is a [link](https://www.youtube.com/watch?v=bbqpUfxA_OA) to the promo video:
 
 <a href="https://www.youtube.com/watch?v=bbqpUfxA_OA" target="_blank"><img src="https://raw.githubusercontent.com/lasso-net/lassonet/master/docs/images/video_screenshot.png" width="450" alt="Promo Video"/></a>
 
