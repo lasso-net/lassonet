@@ -60,7 +60,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             loss of the unconstrained model multiplied by eps_start.
         lambda_start : float, default=None
             First value on the path.
-        path_multiplier : float or None
+        path_multiplier : float
             Multiplicative factor (:math:`1 + \\epsilon`) to increase
             the penalty parameter over the path
         M : float, default=10.0
@@ -427,7 +427,7 @@ def lassonet_path(X, y, task, **kwargs):
         loss of the unconstrained model multiplied by eps_start.
     lambda_start : float, default=None
         First value on the path.
-    path_multiplier : float or None
+    path_multiplier : float
         Multiplicative factor (:math:`1 + \\epsilon`) to increase
         the penalty parameter over the path
     M : float, default=10.0
