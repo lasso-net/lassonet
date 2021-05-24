@@ -11,6 +11,7 @@ def lassonet_path(*args, **kwargs):
     def convert_item(item):
         item = asdict(item)
         item["state_dict"] = {k: v.numpy() for k, v in item["state_dict"].items()}
+        item["selected"] = item["selected"].numpy()
         return item
 
     return list(map(convert_item, _lassonet_path(*args, **kwargs)))
