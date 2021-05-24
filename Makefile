@@ -2,7 +2,7 @@ pypi: dist
 	twine upload dist/*
 	
 dist:
-	-rm dist/*
+	- rm -rf dist
 	python3 setup.py sdist bdist_wheel
 
 docs:
@@ -11,4 +11,4 @@ docs:
 	mkdir docs/api
 	cp -r sphinx_docs/_build/html/* docs/api
 
-.PHONY: docs
+.PHONY: docs dist
