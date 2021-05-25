@@ -10,12 +10,13 @@ import numpy as np
 
 def make_writable(x):
     if isinstance(x, np.ndarray):
-        x.setflags(write=True)
+        x = x.copy()
+    return x
 
 
 def lassonet_path(X, y, task, *args, **kwargs):
-    make_writable(X)
-    make_writable(y)
+    X = make_writable(X)
+    y = make_writable(y)
 
     def convert_item(item):
         item = asdict(item)
@@ -27,7 +28,7 @@ def lassonet_path(X, y, task, *args, **kwargs):
 
 
 def lassonet_eval(X, task, state_dict, **kwargs):
-    make_writable(X)
+    X = make_writable(X)
 
     if task == "classification":
         model = LassoNetClassifier(**kwargs)
