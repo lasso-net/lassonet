@@ -5,19 +5,31 @@ from .interfaces import (
     LassoNetClassifier,
     LassoNetRegressor,
 )
+import numpy as np
 
 
-def lassonet_path(*args, **kwargs):
+def make_writable(x):
+    if isinstance(x, np.ndarray):
+        x.setflags(write=True)
+    return x
+
+
+def lassonet_path(X, y, task, *args, **kwargs):
+    X = make_writable(X)
+    y = make_writable(y)
+
     def convert_item(item):
         item = asdict(item)
         item["state_dict"] = {k: v.numpy() for k, v in item["state_dict"].items()}
         item["selected"] = item["selected"].numpy()
         return item
 
-    return list(map(convert_item, _lassonet_path(*args, **kwargs)))
+    return list(map(convert_item, _lassonet_path(X, y, task, *args, **kwargs)))
 
 
 def lassonet_eval(X, task, state_dict, **kwargs):
+    X = make_writable(X)
+
     if task == "classification":
         model = LassoNetClassifier(**kwargs)
     elif task == "regression":
