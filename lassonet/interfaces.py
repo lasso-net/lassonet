@@ -378,8 +378,9 @@ class LassoNetClassifier(
     """Use LassoNet as classifier"""
 
     def _convert_y(self, y) -> torch.TensorType:
+        y = torch.LongTensor(y).to(self.device)
         assert len(y.shape) == 1, "y must be 1D"
-        return torch.LongTensor(y).to(self.device)
+        return y
 
     @staticmethod
     def _output_shape(y):
