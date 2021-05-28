@@ -9,3 +9,5 @@ docs/api/_sources
 dist/
 build/
 /*.png
+.idea
+.fuse_hidden*
