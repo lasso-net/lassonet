@@ -199,7 +199,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         best_val_obj = validation_obj()
         epochs_since_best_val_obj = 0
         if self.backtrack:
-            best_state_dict = self.state_dict()
+            best_state_dict = self.model.state_dict()
             real_best_val_obj = best_val_obj
         n_iters = 0
         loss = None
@@ -226,7 +226,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             else:
                 epochs_since_best_val_obj += 1
             if self.backtrack and val_obj < real_best_val_obj:
-                best_state_dict = self.state_dict()
+                best_state_dict = self.model.state_dict()
                 real_best_val_obj = val_obj
                 n_iters = epoch + 1
             if patience is not None and epochs_since_best_val_obj == patience:
