@@ -41,6 +41,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         hidden_dims=(100,),
         eps_start=1,
         lambda_start=None,
+        lambda_seq=None,
         path_multiplier=1.02,
         M=10,
         optim=None,
@@ -66,6 +67,10 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         path_multiplier : float
             Multiplicative factor (:math:`1 + \\epsilon`) to increase
             the penalty parameter over the path
+        lambda_seq : iterable of float
+            If specified, the model will be trained on this sequence
+            of values, until all coefficients are zero.
+            Note: lambda_start and path_multiplier will be ignored.
         M : float, default=10.0
             Hierarchy parameter.
         optim : torch optimizer or tuple of 2 optimizers, default=None
@@ -93,6 +98,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         self.hidden_dims = hidden_dims
         self.eps_start = eps_start
         self.lambda_start = lambda_start
+        self.lambda_seq = lambda_seq
         self.path_multiplier = path_multiplier
         self.M = M
         if optim is None:
@@ -274,14 +280,27 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                 f"val loss {hist[-1].val_loss:.2e}, "
                 f"regularization {hist[-1].regularization:.2e}"
             )
-        if self.lambda_start is not None:
-            current_lambda = self.lambda_start
-        else:
-            # don't take hist[-1].regularization into account!
-            current_lambda = self.eps_start * hist[-1].val_loss
+
+        # build lambda_seq
+        lambda_seq = self.lambda_seq
+        if lambda_seq is None:
+
+            def _lambda_seq(start):
+                while True:
+                    yield start
+                    start *= self.path_multiplier
+
+            if self.lambda_start is not None:
+                lambda_seq = _lambda_seq(self.lambda_start)
+            else:
+                # don't take hist[-1].regularization into account!
+                lambda_seq = _lambda_seq(self.eps_start * hist[-1].val_loss)
+
         optimizer = self.optim_path(self.model.parameters())
 
-        while self.model.selected_count() != 0:
+        for current_lambda in lambda_seq:
+            if self.model.selected_count() == 0:
+                break
             hist.append(
                 self._train(
                     X_train,
@@ -308,8 +327,6 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                     f"{last.val_loss:.2e}, "
                     f"regularization {last.regularization:.2e}"
                 )
-
-            current_lambda *= self.path_multiplier
 
         self.feature_importances_ = self._compute_feature_importances(hist)
         """When does each feature disappear on the path?"""
