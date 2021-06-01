@@ -25,6 +25,9 @@ def abstractattr(f):
 class HistoryItem:
     lambda_: float
     state_dict: dict
+    objective: float  # loss + lambda_ * regulatization
+    loss: float
+    val_objective: float  # val_loss + lambda_ * regulatization
     val_loss: float
     regularization: float
     selected: torch.BoolTensor
@@ -169,10 +172,10 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         lambda_,
         optimizer,
         patience=None,
-    ):
+    ) -> HistoryItem:
         model = self.model
 
-        def validation_loss():
+        def validation_obj():
             with torch.no_grad():
                 model.eval()
                 return (
@@ -180,12 +183,13 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                     + lambda_ * model.regularization().item()
                 )
 
-        best_obj = validation_loss()
-        epochs_since_best_obj = 0
-
+        best_val_obj = validation_obj()
+        epochs_since_best_val_obj = 0
+        loss = None
         for epoch in range(epochs):
 
             def closure():
+                nonlocal loss
                 optimizer.zero_grad()
                 loss = self.criterion(model(X_train), y_train)
                 loss.backward()
@@ -196,15 +200,26 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             if lambda_:
                 model.prox(lambda_=lambda_ * optimizer.param_groups[0]["lr"], M=self.M)
 
-            obj = validation_loss()
-            if obj < self.tol * best_obj:
-                best_obj = obj
-                epochs_since_best_obj = 0
+            val_obj = validation_obj()
+            if val_obj < self.tol * best_val_obj:
+                best_val_obj = val_obj
+                epochs_since_best_val_obj = 0
             else:
-                epochs_since_best_obj += 1
-            if patience is not None and epochs_since_best_obj == patience:
+                epochs_since_best_val_obj += 1
+            if patience is not None and epochs_since_best_val_obj == patience:
                 break
-        return lambda_, epoch + 1, obj
+        reg = self.model.regularization().item()
+        return HistoryItem(
+            lambda_=lambda_,
+            state_dict=self.model.cpu_state_dict(),
+            objective=loss + lambda_ * reg,
+            loss=loss,
+            val_objective=val_obj,
+            val_loss=val_obj - lambda_ * reg,
+            regularization=reg,
+            selected=self.model.input_mask(),
+            n_iters=epoch + 1,
+        )
 
     @abstractmethod
     def predict(self, X):
@@ -228,26 +243,13 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         X_train, y_train = self._cast_input(X_train, y_train)
         X_val, y_val = self._cast_input(X_val, y_val)
 
-        hist = []
-
-        def register(hist, lambda_, n_iters, val_loss):
-            hist.append(
-                HistoryItem(
-                    lambda_=lambda_,
-                    state_dict=self.model.cpu_state_dict(),
-                    val_loss=val_loss,
-                    regularization=self.model.regularization().item(),
-                    selected=self.model.input_mask(),
-                    n_iters=n_iters,
-                )
-            )
+        hist: List[HistoryItem] = []
 
         if self.model is None:
             self._init_model(X_train, y_train)
 
-        register(
-            hist,
-            *self._train(
+        hist.append(
+            self._train(
                 X_train,
                 y_train,
                 X_val,
@@ -256,7 +258,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                 epochs=self.n_iters_init,
                 optimizer=self.optim_init(self.model.parameters()),
                 patience=self.patience_init,
-            ),
+            )
         )
         if self.verbose:
             print(
@@ -272,9 +274,8 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         optimizer = self.optim_path(self.model.parameters())
 
         while self.model.selected_count() != 0:
-            register(
-                hist,
-                *self._train(
+            hist.append(
+                self._train(
                     X_train,
                     y_train,
                     X_val,
@@ -283,7 +284,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                     epochs=self.n_iters_path,
                     optimizer=optimizer,
                     patience=self.patience_path,
-                ),
+                )
             )
             last = hist[-1]
             if self.verbose:
@@ -293,8 +294,10 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                     f"in {last.n_iters} epochs"
                 )
                 print(
-                    f"val_loss (excl regularization) "
-                    f"{last.val_loss - last.lambda_ * last.regularization:.2e}, "
+                    f"val_objective "
+                    f"{last.val_objective:.2e}, "
+                    f"val_loss "
+                    f"{last.val_loss:.2e}, "
                     f"regularization {last.regularization:.2e}"
                 )
 
