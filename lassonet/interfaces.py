@@ -48,6 +48,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         n_iters=(1000, 100),
         patience=(100, 10),
         tol=0.99,
+        backtrack=False,
         val_size=0.1,
         device=None,
         verbose=0,
@@ -85,6 +86,8 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             Number of epochs to wait without improvement during early stopping.
         tol : float, default=0.99
             Minimum improvement for early stopping: new objective < tol * old objective.
+        backtrack : bool, default=False
+            If true, ensures the objective function decreases.
         val_size : float, default=0.1
             Proportion of data to use for early stopping.
             If X_val and y_val are given during training, it will be ignored.
@@ -119,6 +122,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             patience = (patience, patience)
         self.patience_init, self.patience_path = patience
         self.tol = tol
+        self.backtrack = backtrack
         self.val_size = val_size
         if device is None:
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -194,6 +198,10 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
 
         best_val_obj = validation_obj()
         epochs_since_best_val_obj = 0
+        if self.backtrack:
+            best_state_dict = self.state_dict()
+            real_best_val_obj = best_val_obj
+        n_iters = 0
         loss = None
         for epoch in range(epochs):
 
@@ -214,10 +222,18 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             if val_obj < self.tol * best_val_obj:
                 best_val_obj = val_obj
                 epochs_since_best_val_obj = 0
+                n_iters = epoch + 1
             else:
                 epochs_since_best_val_obj += 1
+            if self.backtrack and val_obj < real_best_val_obj:
+                best_state_dict = self.state_dict()
+                real_best_val_obj = val_obj
+                n_iters = epoch + 1
             if patience is not None and epochs_since_best_val_obj == patience:
                 break
+
+        if self.backtrack:
+            self.model.load_state_dict(best_state_dict)
         reg = self.model.regularization().item()
         return HistoryItem(
             lambda_=lambda_,
@@ -228,7 +244,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             val_loss=val_obj - lambda_ * reg,
             regularization=reg,
             selected=self.model.input_mask(),
-            n_iters=epoch + 1,
+            n_iters=n_iters,
         )
 
     @abstractmethod
