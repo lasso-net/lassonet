@@ -79,6 +79,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             Number of epochs to wait without improvement during early stopping.
         val_size : float, default=0.1
             Proportion of data to use for early stopping.
+            If X_val and y_val are given during training, it will be ignored.
         device : torch device, default=None
             Device on which to train the model using PyTorch.
             Default: GPU if available else CPU
@@ -87,7 +88,6 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             Random state for cross-validation
         torch_seed
             Torch state for model random initialization
-
         """
 
         self.hidden_dims = hidden_dims
@@ -154,12 +154,12 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         y = self._convert_y(y)
         return X, y
 
-    def fit(self, X, y):
+    def fit(self, X, y, *, X_val=None, y_val=None):
         """Train the model.
         Note that if `lambda_` is not given, the trained model
         will most likely not use any feature.
         """
-        self.path(X, y)
+        self.path(X, y, X_val=X_val, y_val=y_val)
         return self
 
     def _train(
@@ -229,7 +229,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
     def _lambda_max(X, y):
         raise NotImplementedError
 
-    def path(self, X, y, lambda_=None) -> List[HistoryItem]:
+    def path(self, X, y, *, X_val=None, y_val=None, lambda_=None) -> List[HistoryItem]:
         """Train LassoNet on a lambda_ path.
         The path is defined by the class parameters:
         start at `eps * lambda_max` and increment according
@@ -239,7 +239,15 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         The optional `lambda_` argument will also stop the path when
         this value is reached.
         """
-        X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=self.val_size)
+        assert (sample_val := X_val is None) == (
+            y_val is None
+        ), "You must specify both or none of X_val and y_val"
+        if sample_val:
+            X_train, X_val, y_train, y_val = train_test_split(
+                X, y, test_size=self.val_size
+            )
+        else:
+            X_train, y_train = X, y
         X_train, y_train = self._cast_input(X_train, y_train)
         X_val, y_val = self._cast_input(X_val, y_val)
 
@@ -414,7 +422,7 @@ class LassoNetClassifier(
         return ans
 
 
-def lassonet_path(X, y, task, **kwargs):
+def lassonet_path(X, y, task, *, X_val=None, y_val=None, **kwargs):
     """
     Parameters
     ----------
@@ -424,37 +432,12 @@ def lassonet_path(X, y, task, **kwargs):
         Target values
     task : str, must be "classification" or "regression"
         Task
-    hidden_dims : tuple of int, default=(100,)
-        Shape of the hidden layers.
-    eps_start : float, default=1
-        Sets lambda_start such that it has a strength comparable to the
-        loss of the unconstrained model multiplied by eps_start.
-    lambda_start : float, default=None
-        First value on the path.
-    path_multiplier : float
-        Multiplicative factor (:math:`1 + \\epsilon`) to increase
-        the penalty parameter over the path
-    M : float, default=10.0
-        Hierarchy parameter.
-    optim : torch optimizer or tuple of 2 optimizers, default=None
-        Optimizer for initial training and path computation.
-        Default is Adam(lr=1e-3), SGD(lr=1e-3, momentum=0.9).
-    n_iters : int or pair of int, default=(1000, 100)
-        Maximum number of training epochs for initial training and path computation.
-        This is an upper-bound on the effective number of epochs, since the model
-        uses early stopping.
-    patience : int or pair of int, default=10
-        Number of epochs to wait without improvement during early stopping.
-    val_size : float, default=0.1
-        Proportion of data to use for early stopping.
-    device : torch device, default=None
-        Device on which to train the model using PyTorch.
-        Default: GPU if available else CPU
-    verbose : int, default=0
-    random_state
-        Random state for cross-validation
-    torch_seed
-        Torch state for model random initialization
+    X_val : array-like of shape (n_samples, n_features)
+        Validation data
+    y_val : array-like of shape (n_samples,) or (n_samples, n_outputs)
+        Validation values
+
+    See BaseLassoNet for the other parameters.
     """
     if task == "classification":
         model = LassoNetClassifier(**kwargs)
@@ -462,4 +445,4 @@ def lassonet_path(X, y, task, **kwargs):
         model = LassoNetRegressor(**kwargs)
     else:
         raise ValueError('task must be "classification" or "regression"')
-    return model.path(X, y)
+    return model.path(X, y, X_val=X_val, y_val=y_val)
