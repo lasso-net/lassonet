@@ -83,6 +83,8 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             uses early stopping.
         patience : int or pair of int, default=10
             Number of epochs to wait without improvement during early stopping.
+        tol : float, default=0.99
+            Minimum improvement for early stopping: new objective < tol * old objective.
         val_size : float, default=0.1
             Proportion of data to use for early stopping.
             If X_val and y_val are given during training, it will be ignored.
