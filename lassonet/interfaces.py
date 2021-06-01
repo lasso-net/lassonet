@@ -70,6 +70,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         lambda_seq : iterable of float
             If specified, the model will be trained on this sequence
             of values, until all coefficients are zero.
+            The dense model will always be trained first.
             Note: lambda_start and path_multiplier will be ignored.
         M : float, default=10.0
             Hierarchy parameter.
