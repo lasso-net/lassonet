@@ -198,9 +198,10 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             def closure():
                 nonlocal loss
                 optimizer.zero_grad()
-                loss = self.criterion(model(X_train), y_train)
-                loss.backward()
-                return loss
+                ans = self.criterion(model(X_train), y_train)
+                loss = ans.item()
+                ans.backward()
+                return ans
 
             model.train()
             optimizer.step(closure)
