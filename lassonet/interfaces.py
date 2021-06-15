@@ -107,6 +107,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         self.lambda_seq = lambda_seq
         self.path_multiplier = path_multiplier
         self.M = M
+        self.optim = optim
         if optim is None:
             optim = (
                 partial(torch.optim.Adam, lr=1e-3),
@@ -117,16 +118,16 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         self.optim_init, self.optim_path = optim
         if isinstance(n_iters, int):
             n_iters = (n_iters, n_iters)
-        self.n_iters_init, self.n_iters_path = n_iters
+        self.n_iters = self.n_iters_init, self.n_iters_path = n_iters
         if isinstance(patience, int):
             patience = (patience, patience)
-        self.patience_init, self.patience_path = patience
+        self.patience = self.patience_init, self.patience_path = patience
         self.tol = tol
         self.backtrack = backtrack
         self.val_size = val_size
+        self.device = device
         if device is None:
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.device = device
 
         self.verbose = verbose
 
