@@ -44,6 +44,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         lambda_seq=None,
         path_multiplier=1.02,
         M=10,
+        batch_size=None,
         optim=None,
         n_iters=(1000, 100),
         patience=(100, 10),
@@ -75,6 +76,8 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             Note: lambda_start and path_multiplier will be ignored.
         M : float, default=10.0
             Hierarchy parameter.
+        batch_size : int, default=None
+            If None, does not use batches. Batches are shuffled at each epoch.
         optim : torch optimizer or tuple of 2 optimizers, default=None
             Optimizer for initial training and path computation.
             Default is Adam(lr=1e-3), SGD(lr=1e-3, momentum=0.9).
@@ -107,6 +110,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         self.lambda_seq = lambda_seq
         self.path_multiplier = path_multiplier
         self.M = M
+        self.batch_size = batch_size
         self.optim = optim
         if optim is None:
             optim = (
@@ -182,6 +186,8 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         y_train,
         X_val,
         y_val,
+        *,
+        batch_size,
         epochs,
         lambda_,
         optimizer,
@@ -203,27 +209,41 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             best_state_dict = self.model.state_dict()
             real_best_val_obj = best_val_obj
         n_iters = 0
-        loss = None
+
+        n_train = len(X_train)
+        if batch_size is None:
+            batch_size = n_train
+            randperm = torch.arange
+        else:
+            randperm = torch.randperm
+        batch_size = min(batch_size, n_train)
+
         for epoch in range(epochs):
-
-            def closure():
-                nonlocal loss
-                optimizer.zero_grad()
-                ans = self.criterion(model(X_train), y_train)
-                loss = ans.item()
-                ans.backward()
-                return ans
-
+            indices = randperm(n_train)
             model.train()
-            optimizer.step(closure)
-            if lambda_:
-                model.prox(lambda_=lambda_ * optimizer.param_groups[0]["lr"], M=self.M)
+            loss = 0
+            for i in range(n_train // batch_size):
+                # don't take batches that are not full
+                batch = indices[i * batch_size : (i + 1) * batch_size]
+
+                def closure():
+                    nonlocal loss
+                    optimizer.zero_grad()
+                    ans = self.criterion(model(X_train[batch]), y_train[batch])
+                    ans.backward()
+                    loss += ans.item() * len(batch) / n_train
+                    return ans
+
+                optimizer.step(closure)
+                if lambda_:
+                    model.prox(
+                        lambda_=lambda_ * optimizer.param_groups[0]["lr"], M=self.M
+                    )
 
             val_obj = validation_obj()
             if val_obj < self.tol * best_val_obj:
                 best_val_obj = val_obj
                 epochs_since_best_val_obj = 0
-                n_iters = epoch + 1
             else:
                 epochs_since_best_val_obj += 1
             if self.backtrack and val_obj < real_best_val_obj:
@@ -235,6 +255,8 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
 
         if self.backtrack:
             self.model.load_state_dict(best_state_dict)
+        else:
+            n_iters = epoch + 1
         reg = self.model.regularization().item()
         return HistoryItem(
             lambda_=lambda_,
@@ -289,6 +311,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                 y_train,
                 X_val,
                 y_val,
+                batch_size=self.batch_size,
                 lambda_=0,
                 epochs=self.n_iters_init,
                 optimizer=self.optim_init(self.model.parameters()),
@@ -328,6 +351,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                     y_train,
                     X_val,
                     y_val,
+                    batch_size=self.batch_size,
                     lambda_=current_lambda,
                     epochs=self.n_iters_path,
                     optimizer=optimizer,
