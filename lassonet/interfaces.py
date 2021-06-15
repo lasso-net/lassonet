@@ -249,12 +249,15 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             if self.backtrack and val_obj < real_best_val_obj:
                 best_state_dict = self.model.state_dict()
                 real_best_val_obj = val_obj
+                real_loss = loss
                 n_iters = epoch + 1
             if patience is not None and epochs_since_best_val_obj == patience:
                 break
 
         if self.backtrack:
             self.model.load_state_dict(best_state_dict)
+            val_obj = real_best_val_obj
+            loss = real_loss
         else:
             n_iters = epoch + 1
         reg = self.model.regularization().item()
