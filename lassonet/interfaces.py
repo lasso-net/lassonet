@@ -285,15 +285,12 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
     def _lambda_max(X, y):
         raise NotImplementedError
 
-    def path(self, X, y, *, X_val=None, y_val=None, lambda_=None) -> List[HistoryItem]:
+    def path(self, X, y, *, X_val=None, y_val=None) -> List[HistoryItem]:
         """Train LassoNet on a lambda_ path.
         The path is defined by the class parameters:
         start at `eps * lambda_max` and increment according
         to `path_multiplier` or `n_lambdas`.
         The path will stop when no feature is being used anymore.
-
-        The optional `lambda_` argument will also stop the path when
-        this value is reached.
         """
         assert (sample_val := X_val is None) == (
             y_val is None
