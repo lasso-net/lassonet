@@ -21,10 +21,8 @@ class LassoNet(nn.Module):
             for g in groups:
                 for i in g:
                     all_indices.append(i)
-            assert set(all_indices) == set(range(n_inputs)) and len(
-                set(all_indices)
-            ) == len(
-                all_indices
+            assert len(all_indices) == n_inputs and set(all_indices) == set(
+                range(n_inputs)
             ), f"Groups must be a partition of range(n_inputs={n_inputs})"
 
         self.groups = groups
