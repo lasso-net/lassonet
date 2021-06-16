@@ -26,7 +26,12 @@ y = scale(y)
 
 X_train, X_test, y_train, y_test = train_test_split(X, y)
 
-model = LassoNetRegressor(hidden_dims=(10,), verbose=True, patience=(100, 5))
+model = LassoNetRegressor(
+    hidden_dims=(10,),
+    verbose=True,
+    patience=(100, 5),
+    groups=[[0, 1, 2], [3, 4, 5], [6, 7, 8], [9, 10, 11], [12], list(range(13, 26))],
+)
 path = model.path(X_train, y_train)
 
 n_selected = []
