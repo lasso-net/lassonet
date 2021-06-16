@@ -30,6 +30,7 @@ model = LassoNetRegressor(
     hidden_dims=(10,),
     verbose=True,
     patience=(100, 5),
+    groups=[[0, 1, 2], [3, 4, 5], [6, 7, 8], [9, 10, 11], [12], list(range(13, 26))],
 )
 path = model.path(X_train, y_train)
 
@@ -67,7 +68,7 @@ plt.xlabel("lambda")
 plt.xscale("log")
 plt.ylabel("number of selected features")
 
-plt.savefig("boston.png")
+plt.savefig("boston-group.png")
 
 plt.clf()
 
@@ -104,4 +105,4 @@ plt.xticks(np.arange(n_features), ordered_feature_names, rotation=90)
 plt.legend(handles, labels)
 plt.ylabel("Feature order")
 
-plt.savefig("boston-bar.png")
+plt.savefig("boston-bar-group.png")
