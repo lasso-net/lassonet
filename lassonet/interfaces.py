@@ -286,7 +286,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         raise NotImplementedError
 
     def path(self, X, y, *, X_val=None, y_val=None) -> List[HistoryItem]:
-        """Train LassoNet on a lambda_ path.
+        """Train LassoNet on a lambda path.
         The path is defined by the class parameters:
         start at `eps * lambda_max` and increment according
         to `path_multiplier` or `n_lambdas`.
