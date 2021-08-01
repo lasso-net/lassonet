@@ -409,6 +409,8 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         return ans
 
     def load(self, state_dict):
+        if isinstance(state_dict, HistoryItem):
+            state_dict = state_dict.state_dict
         if self.model is None:
             output_shape, input_shape = state_dict["skip.weight"].shape
             self.model = LassoNet(
@@ -418,6 +420,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             ).to(self.device)
 
         self.model.load_state_dict(state_dict)
+        return self
 
 
 class LassoNetRegressor(
