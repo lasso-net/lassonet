@@ -9,3 +9,4 @@ docs/api/_sources
 dist/
 build/
 /*.png
+/*.jpg
