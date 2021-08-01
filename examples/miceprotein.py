@@ -39,3 +39,12 @@ path = model.path(X_train, y_train)
 plot_path(model, path, X_test, y_test)
 
 plt.savefig("miceprotein.png")
+
+
+model = LassoNetClassifier(batch_size=64, backtrack=True, verbose=True)
+path = model.path(X_train, y_train)
+
+
+plot_path(model, path, X_test, y_test)
+
+plt.savefig("miceprotein_backtrack_64.png")
