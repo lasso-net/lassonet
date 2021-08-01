@@ -129,9 +129,9 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         self.tol = tol
         self.backtrack = backtrack
         self.val_size = val_size
-        self.device = device
         if device is None:
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = device
 
         self.verbose = verbose
 
