@@ -99,7 +99,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             Default: GPU if available else CPU
         verbose : int, default=0
         random_state
-            Random state for cross-validation
+            Random state for validation
         torch_seed
             Torch state for model random initialization
         """
@@ -301,7 +301,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         ), "You must specify both or none of X_val and y_val"
         if sample_val:
             X_train, X_val, y_train, y_val = train_test_split(
-                X, y, test_size=self.val_size
+                X, y, test_size=self.val_size, random_state=self.random_state
             )
         else:
             X_train, y_train = X, y
