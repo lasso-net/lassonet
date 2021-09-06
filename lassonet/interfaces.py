@@ -296,9 +296,10 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         The optional `lambda_` argument will also stop the path when
         this value is reached.
         """
-        assert (sample_val := X_val is None) == (
+        assert (X_val is None) == (
             y_val is None
         ), "You must specify both or none of X_val and y_val"
+        sample_val = X_val is None
         if sample_val:
             X_train, X_val, y_train, y_val = train_test_split(
                 X, y, test_size=self.val_size, random_state=self.random_state
