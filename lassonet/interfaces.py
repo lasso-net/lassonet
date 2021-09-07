@@ -117,13 +117,13 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                 partial(torch.optim.Adam, lr=1e-3),
                 partial(torch.optim.SGD, lr=1e-3, momentum=0.9),
             )
-        if isinstance(optim, torch.optim.Optimizer):
+        if isinstance(optim, partial):
             optim = (optim, optim)
         self.optim_init, self.optim_path = optim
         if isinstance(n_iters, int):
             n_iters = (n_iters, n_iters)
         self.n_iters = self.n_iters_init, self.n_iters_path = n_iters
-        if isinstance(patience, int):
+        if patience is None or isinstance(patience, int):
             patience = (patience, patience)
         self.patience = self.patience_init, self.patience_path = patience
         self.tol = tol
