@@ -44,6 +44,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         lambda_seq=None,
         path_multiplier=1.02,
         M=10,
+        dropout=0,
         batch_size=None,
         optim=None,
         n_iters=(1000, 100),
@@ -76,6 +77,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             Note: lambda_start and path_multiplier will be ignored.
         M : float, default=10.0
             Hierarchy parameter.
+        dropout : float, default = None
         batch_size : int, default=None
             If None, does not use batches. Batches are shuffled at each epoch.
         optim : torch optimizer or tuple of 2 optimizers, default=None
@@ -110,6 +112,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         self.lambda_seq = lambda_seq
         self.path_multiplier = path_multiplier
         self.M = M
+        self.dropout = dropout
         self.batch_size = batch_size
         self.optim = optim
         if optim is None:
@@ -160,9 +163,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         if self.torch_seed is not None:
             torch.manual_seed(self.torch_seed)
         self.model = LassoNet(
-            X.shape[1],
-            *self.hidden_dims,
-            output_shape,
+            X.shape[1], *self.hidden_dims, output_shape, dropout=self.dropout
         ).to(self.device)
 
     def _cast_input(self, X, y=None):
@@ -415,9 +416,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         if self.model is None:
             output_shape, input_shape = state_dict["skip.weight"].shape
             self.model = LassoNet(
-                input_shape,
-                *self.hidden_dims,
-                output_shape,
+                input_shape, *self.hidden_dims, output_shape, dropout=self.dropout
             ).to(self.device)
 
         self.model.load_state_dict(state_dict)
