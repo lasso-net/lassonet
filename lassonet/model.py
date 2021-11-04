@@ -1,3 +1,5 @@
+from itertools import islice
+
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -40,6 +42,18 @@ class LassoNet(nn.Module):
                 lambda_bar=lambda_bar,
                 M=M,
             )
+
+    def l2_regularization(self):
+        ans = 0
+        for layer in islice(self.layers, 1, None):
+            ans += (
+                torch.norm(
+                    layer.weight.data,
+                    p=2,
+                )
+                ** 2
+            )
+        return ans
 
     def regularization(self):
         with torch.no_grad():

@@ -30,6 +30,7 @@ class HistoryItem:
     val_objective: float  # val_loss + lambda_ * regulatization
     val_loss: float
     regularization: float
+    l2_regularization: float
     selected: torch.BoolTensor
     n_iters: int
 
@@ -42,6 +43,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         eps_start=1,
         lambda_start=None,
         lambda_seq=None,
+        gamma=0.0,
         path_multiplier=1.02,
         M=10,
         dropout=0,
@@ -67,14 +69,16 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             loss of the unconstrained model multiplied by eps_start.
         lambda_start : float, default=None
             First value on the path.
-        path_multiplier : float
-            Multiplicative factor (:math:`1 + \\epsilon`) to increase
-            the penalty parameter over the path
         lambda_seq : iterable of float
             If specified, the model will be trained on this sequence
             of values, until all coefficients are zero.
             The dense model will always be trained first.
             Note: lambda_start and path_multiplier will be ignored.
+        gamma : float, default=0.0
+            l2 penalization
+        path_multiplier : float
+            Multiplicative factor (:math:`1 + \\epsilon`) to increase
+            the penalty parameter over the path
         M : float, default=10.0
             Hierarchy parameter.
         dropout : float, default = None
@@ -110,6 +114,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         self.eps_start = eps_start
         self.lambda_start = lambda_start
         self.lambda_seq = lambda_seq
+        self.gamma = gamma
         self.path_multiplier = path_multiplier
         self.M = M
         self.dropout = dropout
@@ -202,6 +207,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                 return (
                     self.criterion(model(X_val), y_val).item()
                     + lambda_ * model.regularization().item()
+                    + self.gamma * model.l2_regularization().item()
                 )
 
         best_val_obj = validation_obj()
@@ -232,7 +238,10 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                 def closure():
                     nonlocal loss
                     optimizer.zero_grad()
-                    ans = self.criterion(model(X_train[batch]), y_train[batch])
+                    ans = (
+                        self.criterion(model(X_train[batch]), y_train[batch])
+                        + self.gamma * model.l2_regularization()
+                    )
                     ans.backward()
                     loss += ans.item() * len(batch) / n_train
                     return ans
@@ -266,6 +275,8 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             loss = real_loss
         else:
             n_iters = epoch + 1
+        with torch.no_grad():
+            l2_regularization = self.model.l2_regularization()
         reg = self.model.regularization().item()
         return HistoryItem(
             lambda_=lambda_,
@@ -275,6 +286,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             val_objective=val_obj,
             val_loss=val_obj - lambda_ * reg,
             regularization=reg,
+            l2_regularization=l2_regularization,
             selected=self.model.input_mask(),
             n_iters=n_iters,
         )
@@ -287,15 +299,12 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
     def _lambda_max(X, y):
         raise NotImplementedError
 
-    def path(self, X, y, *, X_val=None, y_val=None, lambda_=None) -> List[HistoryItem]:
+    def path(self, X, y, *, X_val=None, y_val=None) -> List[HistoryItem]:
         """Train LassoNet on a lambda_ path.
         The path is defined by the class parameters:
         start at `eps * lambda_max` and increment according
         to `path_multiplier` or `n_lambdas`.
         The path will stop when no feature is being used anymore.
-
-        The optional `lambda_` argument will also stop the path when
-        this value is reached.
         """
         assert (X_val is None) == (
             y_val is None
