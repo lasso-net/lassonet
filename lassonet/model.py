@@ -14,7 +14,7 @@ class LassoNet(nn.Module):
         assert len(dims) > 2
         super().__init__()
 
-        self.dropout = dropout
+        self.dropout = nn.Dropout(p=dropout) if dropout is not None else None
         self.layers = nn.ModuleList(
             [nn.Linear(dims[i], dims[i + 1]) for i in range(len(dims) - 1)]
         )
@@ -27,7 +27,7 @@ class LassoNet(nn.Module):
             current_layer = theta(current_layer)
             if theta is not self.layers[-1]:
                 if self.dropout is not None:
-                    current_layer = F.dropout(current_layer, p=self.dropout)
+                    current_layer = self.dropout(current_layer)
                 current_layer = F.relu(current_layer)
         return result + current_layer
 
