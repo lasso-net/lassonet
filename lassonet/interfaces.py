@@ -287,7 +287,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             val_loss=val_obj - lambda_ * reg,
             regularization=reg,
             l2_regularization=l2_regularization,
-            selected=self.model.input_mask(),
+            selected=self.model.input_mask().cpu(),
             n_iters=n_iters,
         )
 
