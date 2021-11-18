@@ -206,7 +206,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                 model.eval()
                 return (
                     self.criterion(model(X_val), y_val).item()
-                    + lambda_ * model.regularization().item()
+                    + lambda_ * model.l1_regularization_skip().item()
                     + self.gamma * model.l2_regularization().item()
                 )
 
@@ -277,7 +277,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             n_iters = epoch + 1
         with torch.no_grad():
             l2_regularization = self.model.l2_regularization()
-        reg = self.model.regularization().item()
+            reg = self.model.l1_regularization_skip().item()
         return HistoryItem(
             lambda_=lambda_,
             state_dict=self.model.cpu_state_dict(),

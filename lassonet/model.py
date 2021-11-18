@@ -44,6 +44,10 @@ class LassoNet(nn.Module):
             )
 
     def l2_regularization(self):
+        """
+        L2 regulatization of the MLP without the first layer
+        which is bounded by the skip connection
+        """
         ans = 0
         for layer in islice(self.layers, 1, None):
             ans += (
@@ -55,9 +59,11 @@ class LassoNet(nn.Module):
             )
         return ans
 
-    def regularization(self):
-        with torch.no_grad():
-            return torch.norm(self.skip.weight.data, p=2, dim=0).sum()
+    def l1_regularization_skip(self):
+        return torch.norm(self.skip.weight.data, p=2, dim=0).sum()
+
+    def l2_regularization_skip(self):
+        return torch.norm(self.skip.weight.data, p=2)
 
     def input_mask(self):
         with torch.no_grad():
