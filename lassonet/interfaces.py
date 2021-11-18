@@ -31,6 +31,7 @@ class HistoryItem:
     val_loss: float
     regularization: float
     l2_regularization: float
+    l2_regularization_skip: float
     selected: torch.BoolTensor
     n_iters: int
 
@@ -44,6 +45,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         lambda_start=None,
         lambda_seq=None,
         gamma=0.0,
+        gamma_skip=0.0,
         path_multiplier=1.02,
         M=10,
         dropout=0,
@@ -75,7 +77,9 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             The dense model will always be trained first.
             Note: lambda_start and path_multiplier will be ignored.
         gamma : float, default=0.0
-            l2 penalization
+            l2 penalization on the network
+        gamma : float, default=0.0
+            l2 penalization on the skip connection
         path_multiplier : float
             Multiplicative factor (:math:`1 + \\epsilon`) to increase
             the penalty parameter over the path
@@ -115,6 +119,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         self.lambda_start = lambda_start
         self.lambda_seq = lambda_seq
         self.gamma = gamma
+        self.gamma_skip = gamma_skip
         self.path_multiplier = path_multiplier
         self.M = M
         self.dropout = dropout
@@ -208,6 +213,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                     self.criterion(model(X_val), y_val).item()
                     + lambda_ * model.l1_regularization_skip().item()
                     + self.gamma * model.l2_regularization().item()
+                    + self.gamma_skip * model.l2_regularization_skip().item()
                 )
 
         best_val_obj = validation_obj()
@@ -241,6 +247,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                     ans = (
                         self.criterion(model(X_train[batch]), y_train[batch])
                         + self.gamma * model.l2_regularization()
+                        + self.gamma_skip * model.l2_regularization_skip()
                     )
                     ans.backward()
                     loss += ans.item() * len(batch) / n_train
@@ -276,8 +283,9 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         else:
             n_iters = epoch + 1
         with torch.no_grad():
-            l2_regularization = self.model.l2_regularization()
             reg = self.model.l1_regularization_skip().item()
+            l2_regularization = self.model.l2_regularization()
+            l2_regularization_skip = self.model.l2_regularization_skip()
         return HistoryItem(
             lambda_=lambda_,
             state_dict=self.model.cpu_state_dict(),
@@ -287,6 +295,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             val_loss=val_obj - lambda_ * reg,
             regularization=reg,
             l2_regularization=l2_regularization,
+            l2_regularization_skip=l2_regularization_skip,
             selected=self.model.input_mask().cpu(),
             n_iters=n_iters,
         )
