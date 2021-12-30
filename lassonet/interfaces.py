@@ -15,6 +15,7 @@ from sklearn.model_selection import train_test_split
 import torch
 
 from .model import LassoNet
+from .online import upload
 
 
 def abstractattr(f):
@@ -58,6 +59,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         val_size=0.1,
         device=None,
         verbose=0,
+        online_logging=False,
         random_state=None,
         torch_seed=None,
     ):
@@ -108,6 +110,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             Device on which to train the model using PyTorch.
             Default: GPU if available else CPU
         verbose : int, default=0
+        online_logging : bool, default=False
         random_state
             Random state for validation
         torch_seed
@@ -147,7 +150,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         self.device = device
 
         self.verbose = verbose
-
+        self.online_logging = online_logging
         self.random_state = random_state
         self.torch_seed = torch_seed
 
@@ -403,6 +406,9 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
 
         self.feature_importances_ = self._compute_feature_importances(hist)
         """When does each feature disappear on the path?"""
+
+        # online logging
+        upload(self, (X, y), hist, online_logging=self.online_logging)
 
         return hist
 

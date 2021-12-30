@@ -1,5 +1,66 @@
+import sys
+import uuid
+
 import matplotlib.pyplot as plt
-from functools import partial
+
+
+def query_yes_no(question, default="yes"):
+    """https://stackoverflow.com/a/3041990/5133167
+
+    Ask a yes/no question via raw_input() and return their answer.
+
+    "question" is a string that is presented to the user.
+    "default" is the presumed answer if the user just hits <Enter>.
+            It must be "yes" (the default), "no" or None (meaning
+            an answer is required of the user).
+
+    The "answer" return value is True for "yes" or False for "no".
+    """
+    valid = {"yes": True, "y": True, "ye": True, "no": False, "n": False}
+    if default is None:
+        prompt = " [y/n] "
+    elif default == "yes":
+        prompt = " [Y/n] "
+    elif default == "no":
+        prompt = " [y/N] "
+    else:
+        raise ValueError("invalid default answer: '%s'" % default)
+
+    while True:
+        sys.stdout.write(question + prompt)
+        choice = input().lower()
+        if default is not None and choice == "":
+            return valid[default]
+        elif choice in valid:
+            return valid[choice]
+        else:
+            sys.stdout.write("Please respond with 'yes' or 'no' " "(or 'y' or 'n').\n")
+
+
+_node = None
+
+
+def machine_identifier():
+    """Inspired by uuid.getnode()
+
+    Get the hardware address as a 48-bit positive integer.
+
+    The first time this runs, it may launch a separate program, which could
+    be quite slow.  If all attempts to obtain the hardware address fail, it returns -1.
+    """
+    global _node
+    if _node is not None:
+        return _node
+
+    for getter in uuid._GETTERS:
+        try:
+            _node = getter()
+        except:
+            continue
+        if (_node is not None) and (0 <= _node < (1 << 48)):
+            return _node
+    _node = -1
+    return _node
 
 
 def plot_path(model, path, X_test, y_test, *, score_function=None):

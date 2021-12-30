@@ -1,5 +1,6 @@
 from setuptools import setup
 from pathlib import Path
+from lassonet import __version__
 
 
 def read(fname):
@@ -8,7 +9,7 @@ def read(fname):
 
 setup(
     name="lassonet",
-    version="0.0.9",
+    version=__version__,
     author="Louis Abraham, Ismael Lemhadri",
     author_email="louis.abraham@yahoo.fr, lemhadri@stanford.edu",
     license="MIT",
@@ -23,7 +24,7 @@ setup(
         "Operating System :: OS Independent",
     ],
     packages=["lassonet"],
-    install_requires=["torch", "scikit-learn", "matplotlib"],
+    install_requires=["torch", "scikit-learn", "matplotlib", "appdirs", "requests"],
     tests_require=["pytest"],
     python_requires=">=3.6.5",
 )

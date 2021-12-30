@@ -21,6 +21,19 @@ pip install lassonet
 
 Our plan is to add more functionality that help users understand the important features in neural networks.
 
+### Online logging
+
+We are working on an experimental feature allowing you to log your experiments online.
+
+If you wish to activate it, run:
+
+```py
+import lassonet.online
+lassonet.online.configure()
+```
+
+or use the `online_logging` argument in `LassoNetRegressor` and `LassoNetClassifier`.
+
 ### Website
 
 LassoNet's website is [https://lassonet.ml](https://lassonet.ml). It contains many useful references including the paper, live talks and additional documentation.

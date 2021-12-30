@@ -1,0 +1,103 @@
+from typing import List
+import numpy as np
+import dataclasses
+from pathlib import Path
+import json
+import requests
+import sys
+
+from appdirs import user_config_dir
+
+from .utils import query_yes_no, machine_identifier
+from . import __version__
+from .interfaces import HistoryItem
+
+
+DEFAULT_CONFIG = dict(
+    autolog=False, identifier=None, endpoint="https://log.lassonet.ml"
+)
+config_path = Path(user_config_dir("lassonet")) / "config.json"
+config_path.parent.mkdir(parents=True, exist_ok=True)
+if not config_path.exists():
+    with open(config_path, "w") as f:
+        json.dump(DEFAULT_CONFIG, f)
+
+
+def get_config(attr=None):
+    with open(config_path) as f:
+        config = json.load(f)
+    if attr is None:
+        return config
+    return config.get(attr)
+
+
+def configure(config=None):
+    if config is None:
+        config = get_config()
+        config["autolog"] = query_yes_no("Activate automatic logging?")
+        config["identifier"] = (
+            input(
+                "Use custom identifier? (leave empty to use a machine identifier)\n",
+            )
+            or None
+        )
+    with open(config_path, "w") as f:
+        json.dump(config, f)
+
+
+def dump_model(model):
+    dump = model.get_params()  # exploit sklearn's features
+    if dump["optim"] is not None:
+        dump["optim"] = str(dump["optim"])
+    if dump["device"] is not None:
+        dump["device"] = dump["device"].type
+    del dump["random_state"]
+    del dump["torch_seed"]
+    return dump
+
+
+def footprint(X, y):
+    return np.corrcoeff(np.concatenate((X.cpu().numpy(), y.cpu().numpy())))
+
+
+def convert_history(hist: List[HistoryItem]):
+    ans = []
+    for it in hist:
+        it = dataclasses.asdict(it)
+        del it["state_dict"]
+        it["selected"] = it["selected"].numpy().tolist()
+        ans.append(it)
+    return ans
+
+
+def is_dev():
+    """
+    Detect if there is a .git folder (indicates local development)
+    """
+    return (Path(__file__).parents[1] / ".git").exists()
+
+
+def identifier():
+    ans = get_config("identifier")
+    if ans is None:
+        return machine_identifier()
+    return ans
+
+
+def upload(model, data, hist, online_logging=False):
+    """
+    data : tuple (X, y)
+    """
+    if not (get_config("autolog") or online_logging):
+        return
+    log = dict(
+        version=__version__,
+        model=dump_model(model),
+        data_footprint=footprint(model._cast_input(*data)).tolist(),
+        history=convert_history(hist),
+        dev=is_dev(),
+        identifier=identifier(),
+    )
+    r = requests.post(get_config("endpoint"), json=log)
+    if not r.ok:
+        print("Could not log, got status code", r.status_code, file=sys.stderr)
