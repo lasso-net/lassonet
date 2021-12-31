@@ -96,7 +96,7 @@ def upload(model, data, hist, online_logging=False):
         data_footprint=footprint(model._cast_input(*data)).tolist(),
         history=convert_history(hist),
         dev=is_dev(),
-        identifier=identifier(),
+        identifier=str(identifier()),
     )
     r = requests.post(get_config("endpoint"), json=log)
     if not r.ok:
