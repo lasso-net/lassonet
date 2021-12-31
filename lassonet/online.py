@@ -14,7 +14,7 @@ from .interfaces import HistoryItem
 
 
 DEFAULT_CONFIG = dict(
-    autolog=False, identifier=None, endpoint="https://log.lassonet.ml"
+    autolog=False, identifier=None, endpoint="https://log.lassonet.ml/newlog"
 )
 config_path = Path(user_config_dir("lassonet")) / "config.json"
 config_path.parent.mkdir(parents=True, exist_ok=True)
