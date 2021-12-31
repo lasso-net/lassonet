@@ -55,7 +55,7 @@ def dump_model(model):
 
 
 def footprint(X, y):
-    return np.corrcoeff(np.concatenate((X.cpu().numpy(), y.cpu().numpy())))
+    return np.cov(np.concatenate((X.cpu().numpy(), y.cpu().numpy()), axis=1))
 
 
 def convert_history(hist):
@@ -102,7 +102,16 @@ def upload(model, data, hist, online_logging=False):
         experiment=experiment,
     )
     endpoint = get_config("endpoint")
-    r = requests.post(endpoint + "/log/new", json=log)
+    r = requests.post(
+        endpoint + "/log/new",
+        json=log
+        # gzip spares >50% of bandwidth, causes
+        # causes `Can not decode content-encoding: gzip`
+        # on server
+        # data=zlib.compress(json.dumps(log).encode()),
+        # headers={"content-encoding": "gzip"},
+    )
+    print(r)
     if not r.ok:
         print("Could not log, got status code", r.status_code, file=sys.stderr)
     else:
