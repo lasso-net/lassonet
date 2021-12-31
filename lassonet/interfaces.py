@@ -3,6 +3,7 @@ from abc import ABCMeta, abstractmethod, abstractstaticmethod
 from dataclasses import dataclass
 from functools import partial
 from typing import List
+from time import time
 
 import numpy as np
 from sklearn.base import (
@@ -34,6 +35,7 @@ class HistoryItem:
     l2_regularization: float
     l2_regularization_skip: float
     selected: torch.BoolTensor
+    seconds: float
     n_iters: int
 
 
@@ -207,6 +209,8 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         optimizer,
         patience=None,
     ) -> HistoryItem:
+
+        start = time()
         model = self.model
 
         def validation_obj():
@@ -300,6 +304,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             l2_regularization=l2_regularization,
             l2_regularization_skip=l2_regularization_skip,
             selected=self.model.input_mask().cpu(),
+            seconds=time() - start,
             n_iters=n_iters,
         )
 
