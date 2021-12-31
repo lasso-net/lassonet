@@ -112,7 +112,8 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             Device on which to train the model using PyTorch.
             Default: GPU if available else CPU
         verbose : int, default=0
-        online_logging : bool, default=False
+        online_logging : bool or str, default=False
+            if non empty string, it will be used as a key
         random_state
             Random state for validation
         torch_seed

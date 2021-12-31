@@ -14,7 +14,7 @@ from .interfaces import HistoryItem
 
 
 DEFAULT_CONFIG = dict(
-    autolog=False, identifier=None, endpoint="https://log.lassonet.ml/newlog"
+    autolog=False, identifier=None, endpoint="https://log.lassonet.ml"
 )
 config_path = Path(user_config_dir("lassonet")) / "config.json"
 config_path.parent.mkdir(parents=True, exist_ok=True)
@@ -90,14 +90,27 @@ def upload(model, data, hist, online_logging=False):
     """
     if not (get_config("autolog") or online_logging):
         return
+    experiment = online_logging if isinstance(online_logging, str) else ""
+    mid = str(identifier())
     log = dict(
         version=__version__,
         model=dump_model(model),
         data_footprint=footprint(model._cast_input(*data)).tolist(),
         history=convert_history(hist),
         dev=is_dev(),
-        identifier=str(identifier()),
+        identifier=mid,
+        experiment=experiment,
     )
-    r = requests.post(get_config("endpoint"), json=log)
+    endpoint = get_config("endpoint")
+    r = requests.post(endpoint + "/log/new", json=log)
     if not r.ok:
         print("Could not log, got status code", r.status_code, file=sys.stderr)
+    else:
+        id_ = r.json()["id"]
+        print(f"Successfully uploaded to {endpoint}/log/{id_}")
+        if experiment:
+            print(
+                f"See other logs for {experiment} at"
+                f"{endpoint}/log/exp/{experiment})"
+            )
+        print(f"See all your logs at {endpoint}/log/id/{mid}")
