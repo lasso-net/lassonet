@@ -292,8 +292,8 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             n_iters = epoch + 1
         with torch.no_grad():
             reg = self.model.l1_regularization_skip().item()
-            l2_regularization = self.model.l2_regularization()
-            l2_regularization_skip = self.model.l2_regularization_skip()
+            l2_regularization = self.model.l2_regularization().item()
+            l2_regularization_skip = self.model.l2_regularization_skip().item()
         return HistoryItem(
             lambda_=lambda_,
             state_dict=self.model.cpu_state_dict(),
