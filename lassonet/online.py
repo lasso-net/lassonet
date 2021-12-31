@@ -9,8 +9,6 @@ import sys
 from appdirs import user_config_dir
 
 from .utils import query_yes_no, machine_identifier
-from . import __version__
-from .interfaces import HistoryItem
 
 
 DEFAULT_CONFIG = dict(
@@ -60,7 +58,7 @@ def footprint(X, y):
     return np.corrcoeff(np.concatenate((X.cpu().numpy(), y.cpu().numpy())))
 
 
-def convert_history(hist: List[HistoryItem]):
+def convert_history(hist):
     ans = []
     for it in hist:
         it = dataclasses.asdict(it)
@@ -88,6 +86,8 @@ def upload(model, data, hist, online_logging=False):
     """
     data : tuple (X, y)
     """
+    from . import __version__  # avoid circular import
+
     if not (get_config("autolog") or online_logging):
         return
     experiment = online_logging if isinstance(online_logging, str) else ""
