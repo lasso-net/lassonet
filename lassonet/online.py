@@ -55,7 +55,7 @@ def dump_model(model):
 
 
 def footprint(X, y):
-    return np.cov(np.concatenate((X.cpu().numpy(), y.cpu().numpy()), axis=1))
+    return np.cov(np.concatenate((X.cpu().numpy(), y.cpu().numpy()), axis=1).T)
 
 
 def convert_history(hist):
@@ -119,7 +119,7 @@ def upload(model, data, hist, online_logging=False):
         print(f"Successfully uploaded to {endpoint}/log/{id_}")
         if experiment:
             print(
-                f"See other logs for {experiment} at"
+                f"See other logs for {experiment} at "
                 f"{endpoint}/log/exp/{experiment})"
             )
         print(f"See all your logs at {endpoint}/log/id/{mid}")
