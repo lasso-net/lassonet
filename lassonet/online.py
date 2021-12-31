@@ -1,11 +1,10 @@
-from typing import List
 import numpy as np
 import dataclasses
 from pathlib import Path
 import json
 import requests
 import sys
-
+from urllib.parse import quote
 from appdirs import user_config_dir
 
 from .utils import query_yes_no, machine_identifier
@@ -120,6 +119,6 @@ def upload(model, data, hist, online_logging=False):
         if experiment:
             print(
                 f"See other logs for {experiment} at "
-                f"{endpoint}/log/exp/{experiment})"
+                f"{endpoint}/log/exp/{quote(experiment)})"
             )
-        print(f"See all your logs at {endpoint}/log/id/{mid}")
+        print(f"See all your logs at {endpoint}/log/id/{quote(mid)}")
