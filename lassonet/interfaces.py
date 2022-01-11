@@ -60,6 +60,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         verbose=0,
         random_state=None,
         torch_seed=None,
+        weighted_loss=None,
     ):
         """
         Parameters
@@ -112,6 +113,8 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             Random state for validation
         torch_seed
             Torch state for model random initialization
+        weighted_loss : A tensor of size C or None
+            Rescaling weights for different class in training.
         """
 
         self.hidden_dims = hidden_dims
@@ -496,7 +499,7 @@ class LassoNetClassifier(
         y_bin[torch.arange(n), y] = True
         return LassoNetRegressor._lambda_max(X, y_bin)
 
-    criterion = torch.nn.CrossEntropyLoss(reduction="mean")
+    criterion = torch.nn.CrossEntropyLoss(weight=self.weighted_loss, reduction="mean")
 
     def predict(self, X):
         with torch.no_grad():
