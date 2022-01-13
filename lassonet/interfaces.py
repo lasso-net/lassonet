@@ -16,7 +16,6 @@ import torch
 
 from .model import LassoNet
 
-
 def abstractattr(f):
     return property(abstractmethod(f))
 
@@ -113,7 +112,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             Random state for validation
         torch_seed
             Torch state for model random initialization
-        weighted_loss : A tensor of size C or None
+        weighted_loss : A list, numpy array, or tensor of size C if use weighted loss; None if use non-weighted loss
             Rescaling weights for different class in training.
         """
 
@@ -155,6 +154,13 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         self.torch_seed = torch_seed
 
         self.model = None
+
+        if task == "regression" and self.weighted_loss is not None: # weighted loss is only for classifier
+            raise ValueError
+        if self.weighted_loss is not None:
+            self.weighted_loss = torch.FloatTensor(self.weighted_loss).to(self.device)
+
+
 
     @abstractmethod
     def _convert_y(self, y) -> torch.TensorType:
