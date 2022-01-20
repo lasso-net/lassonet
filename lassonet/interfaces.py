@@ -155,7 +155,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
 
         self.model = None
 
-        if task == "regression" and self.weighted_loss is not None: # weighted loss is only for classifier
+        if isinstance(self, LassoNetRegressor) and self.weighted_loss is not None: # weighted loss is only for classifier
             raise ValueError
         if self.weighted_loss is not None:
             self.weighted_loss = torch.FloatTensor(self.weighted_loss).to(self.device)
