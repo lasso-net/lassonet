@@ -218,7 +218,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         def validation_obj():
            # return 0
             with torch.no_grad():
-                pdb.set_trace()
+              #  pdb.set_trace()
                 model.eval()
                 return (
                     self.criterion(model(X_val), y_val).item()
