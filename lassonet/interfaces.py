@@ -56,7 +56,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         backtrack=False,
         val_size=0.1,
         device=None,
-        verbose=0,
+        verbose=1,
         random_state=None,
         torch_seed=None,
         weighted_loss=None,
@@ -154,7 +154,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         self.torch_seed = torch_seed
 
         self.model = None
-
+        self.weighted_loss = weighted_loss
         if isinstance(self, LassoNetRegressor) and self.weighted_loss is not None: # weighted loss is only for classifier
             raise ValueError
         if self.weighted_loss is not None:
@@ -449,6 +449,88 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         self.model.load_state_dict(state_dict)
         return self
 
+def cox_ph_loss_sorted(log_h, events, eps: float = 1e-7) :
+    """Requires the input to be sorted by descending duration time.
+    See DatasetDurationSorted.
+    We calculate the negative log of $(\frac{h_i}{\sum_{j \in R_i} h_j})^d$,
+    where h = exp(log_h) are the hazards and R is the risk set, and d is event.
+    We just compute a cumulative sum, and not the true Risk sets. This is a
+    limitation, but simple and fast.
+    """
+    if events.dtype is torch.bool:
+        events = events.float()
+    events = events.view(-1)
+    log_h = log_h.view(-1)
+    gamma = log_h.max()
+    log_cumsum_h = log_h.sub(gamma).exp().cumsum(0).add(eps).log().add(gamma)
+    return - log_h.sub(log_cumsum_h).mul(events).sum().div(events.sum())
+
+def cox_ph_loss(log_h, durations, events, eps: float = 1e-7):
+    """Loss for CoxPH model. If data is sorted by descending duration, see `cox_ph_loss_sorted`.
+    We calculate the negative log of $(\frac{h_i}{\sum_{j \in R_i} h_j})^d$,
+    where h = exp(log_h) are the hazards and R is the risk set, and d is event.
+    We just compute a cumulative sum, and not the true Risk sets. This is a
+    limitation, but simple and fast.
+    """
+    idx = durations.sort(descending=True)[1]
+    events = events[idx]
+    log_h = log_h[idx]
+    return cox_ph_loss_sorted(log_h, events, eps)
+
+class CoxPHLoss(torch.nn.Module):
+    """Loss for CoxPH model. If data is sorted by descending duration, see `cox_ph_loss_sorted`.
+    We calculate the negative log of $(\frac{h_i}{\sum_{j \in R_i} h_j})^d$,
+    where h = exp(log_h) are the hazards and R is the risk set, and d is event.
+    We just compute a cumulative sum, and not the true Risk sets. This is a
+    limitation, but simple and fast.
+    """
+
+    #def forward(self, log_h: Tensor, durations: Tensor, events: Tensor) -> Tensor:
+    def forward(self, h, y):    
+        log_h = torch.log(h)
+        durations = y[:,0]
+        events = y[:,1]
+        return cox_ph_loss(log_h, durations, events)
+
+class LassoNetCoxRegressor(
+    RegressorMixin,
+    MultiOutputMixin,
+    BaseLassoNet,
+):
+    """Use LassoNet as regressor"""
+    def __init__(self, *args, **kwargs):
+        super(LassoNetCoxRegressor, self).__init__(*args, **kwargs)
+        self.crit = CoxPHLoss() # torch.nn.CrossEntropyLoss(weight=self.weighted_loss, reduction="mean")
+
+    def _convert_y(self, y):
+        y = torch.FloatTensor(y).to(self.device)
+        if len(y.shape) == 1:
+            y = y.view(-1, 1)
+        return y
+
+    @staticmethod
+    def _output_shape(y):
+        return 1
+
+    @staticmethod
+    def _lambda_max(X, y):
+        n_samples, _ = X.shape
+        return torch.tensor(X.T.dot(y)).abs().max().item() / n_samples
+
+    # criterion = torch.nn.MSELoss(reduction="mean") # debug: self-define a loss criterion function 
+    @property
+    def criterion(self):
+        return self.crit
+
+   # criterion = CoxPHLoss() # degbug
+
+    def predict(self, X):
+        with torch.no_grad():
+            ans = self.model(self._cast_input(X))
+        if isinstance(X, np.ndarray):
+            ans = ans.cpu().numpy()
+        return ans
+
 
 class LassoNetRegressor(
     RegressorMixin,
@@ -487,6 +569,9 @@ class LassoNetClassifier(
     BaseLassoNet,
 ):
     """Use LassoNet as classifier"""
+    def __init__(self, *args, **kwargs):
+        super(LassoNetClassifier, self).__init__(*args, **kwargs)
+        self.crit = torch.nn.CrossEntropyLoss(weight=self.weighted_loss, reduction="mean")
 
     def _convert_y(self, y) -> torch.TensorType:
         y = torch.LongTensor(y).to(self.device)
@@ -505,7 +590,9 @@ class LassoNetClassifier(
         y_bin[torch.arange(n), y] = True
         return LassoNetRegressor._lambda_max(X, y_bin)
 
-    criterion = torch.nn.CrossEntropyLoss(weight=self.weighted_loss, reduction="mean")
+    @property
+    def criterion(self):
+        return self.crit
 
     def predict(self, X):
         with torch.no_grad():
