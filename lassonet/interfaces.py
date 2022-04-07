@@ -463,10 +463,12 @@ def cox_ph_loss(log_h, durations, events):
     """Cox loss with Breslow Approximation."""
     # log_h and events are in descending order rsp. event time
     # sort the data
+
     log_h = log_h.view(-1)
     idx = durations.sort(descending=True)[1]
     events = events[idx]
     log_h = log_h[idx]
+    durations = durations[idx]
 
     # calculate the loss
     loss = - log_h[events.nonzero()].sum()
@@ -475,12 +477,7 @@ def cox_ph_loss(log_h, durations, events):
     S = log_cse[nonzero_ind].view(-1)  # dense 1d array
     durations = durations[nonzero_ind].view(-1) 
 
-    # decimal is the number of decimal digits we want to consider when two events are tied, bin_len is the number of digits grouped in one tie, which is 1 by default. 
-    # if we want better precision, we can increase decimal to a larger number
-    decimal, bin_len = 6, 1 
-    durations_copy = durations.clone() * (10**decimal)
-    bins = durations_copy.div(bin_len, rounding_mode="floor")
-    _, count = torch.unique_consecutive(bins, return_counts=True) # count bin unique element occurrence times
+    _, count = torch.unique_consecutive(durations, return_counts=True) # count bin unique element occurrence times
     bins_max_loc = count.cumsum(axis=0) - 1 # last item location for each bin
     loss = loss + (S[bins_max_loc] * count).sum()
     return loss

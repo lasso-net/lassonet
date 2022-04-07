@@ -9,7 +9,7 @@ import scipy, importlib, pprint, matplotlib.pyplot as plt, warnings
 import pandas as pd
 
 scriptpath = '../'
-#scriptpath = "/Users/xuelinyang/Documents/lassonet_cox/"
+#scriptpath = "/Users/xuelinyang/Documents/lassonet/"
 sys.path.append(os.path.abspath(scriptpath))
 
 from lassonet.interfaces import LassoNetRegressor, LassoNetCoxRegressor
@@ -57,8 +57,6 @@ if not os.path.exists(dir_path):
 	os.makedirs(dir_path)
 prefix = dir_path + "/hidden_" + str(hidden_dim)+ "_eps_"+ str(eps_start) +"_lambd_" + str(lambda_start)+"_pm_"+ str(path_multiplier) + "_bs_None" + unique_name + "_loss"
 
-plot_cox_loss(model, path, X_test, y_test, is_twin=False, ori_loss_type='cox')
+plot_cox_loss(model, path, X_test, y_test, is_twin=True, ori_loss_type='cox')
 #plot_cox_loss(model, path, X_test, y_test, is_twin=True, ori_loss_type='cox')
 plt.savefig(prefix+".png")
-
-plt.clf()
