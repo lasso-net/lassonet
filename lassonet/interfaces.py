@@ -33,8 +33,7 @@ class HistoryItem:
     l2_regularization_skip: float
     selected: torch.BoolTensor
     n_iters: int
-    ori_loss: float # crit()
-    alt_loss: float # alt_crit()
+
 
 
 class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
@@ -272,14 +271,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                 # fallback to running loss of first epoch
                 real_loss = loss
             val_obj = validation_obj()
-            with torch.no_grad():
-                # log the training loss for future plotting
-                ori_loss = self.criterion(model(X_train), y_train)
-                if self.alternative_criterion is not None:
-                    alt_loss = self.alternative_criterion(model(X_train), y_train)
-                else:
-                    alt_loss = None
-              #  print(ori_loss, alt_loss)
+
             if val_obj < self.tol * best_val_obj:
                 best_val_obj = val_obj
                 epochs_since_best_val_obj = 0
@@ -315,8 +307,6 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             l2_regularization_skip=l2_regularization_skip,
             selected=self.model.input_mask().cpu(),
             n_iters=n_iters,
-            ori_loss=ori_loss,
-            alt_loss=alt_loss,
         )
 
     @abstractmethod
@@ -490,27 +480,6 @@ class CoxPHLoss(torch.nn.Module):
         loss = cox_ph_loss(log_h.clone(), durations, events)  
         return loss 
 
-def cox_ph_loss_alt(log_h, durations, events, eps: float = 1e-7) :
-    """An approximation of cox loss without using ties. Used in PyCox."""
-    idx = durations.sort(descending=True)[1] # from descending order, sorted durations
-    events = events[idx]
-    log_h = log_h[idx]
-    events = events.view(-1)
-    log_h = log_h.view(-1)
-    gamma = log_h.max()
-    log_cumsum_h = log_h.sub(gamma).exp().cumsum(0).add(eps).log().add(gamma)
-    loss = log_h.sub(log_cumsum_h).mul(events).sum()
-    return - loss
-
-class CoxPHLoss_alt(torch.nn.Module):
-    """Alternative cox loss for sanity check. An approximation of cox loss without using ties. This can be customized to any other loss for comparison."""
-    def forward(self, log_h, y):  
-        durations = y[:,0].clone()
-        events = y[:,1].clone()
-        loss = cox_ph_loss_alt(log_h.clone(), durations, events)  
-        return loss 
-
-
 class LassoNetCoxRegressor(
     RegressorMixin,
     MultiOutputMixin,
@@ -520,9 +489,6 @@ class LassoNetCoxRegressor(
     def __init__(self, *args, **kwargs):
         super(LassoNetCoxRegressor, self).__init__(*args, **kwargs)
         self.crit = CoxPHLoss() 
-        self.alt_crit = CoxPHLoss_alt() # None #CoxPHLoss() 
-        # alt_crit is for comparing the original loss to the other loss. You can customize a loss function.
-
 
     def _convert_y(self, y): 
         y = torch.FloatTensor(y).to(self.device)
@@ -540,11 +506,6 @@ class LassoNetCoxRegressor(
     @property
     def criterion(self):
         return self.crit
-
-    @property
-    def alternative_criterion(self):
-        # alternative criterion if the user want to compare 
-        return self.alt_crit
 
     def foo(self):
         return self._foo
@@ -624,7 +585,7 @@ class LassoNetClassifier(
     def __init__(self, *args, **kwargs):
         super(LassoNetClassifier, self).__init__(*args, **kwargs)
         self.crit = torch.nn.CrossEntropyLoss(weight=self.weighted_loss, reduction="mean")
-        self.alt_crit = None
+ 
 
     def _convert_y(self, y) -> torch.TensorType:
         y = torch.LongTensor(y).to(self.device)
@@ -646,11 +607,6 @@ class LassoNetClassifier(
     @property
     def criterion(self):
         return self.crit
-
-    @property
-    def alternative_criterion(self):
-        # alternative criterion if the user want to compare 
-        return self.alt_crit
 
     def predict(self, X):
         with torch.no_grad():
