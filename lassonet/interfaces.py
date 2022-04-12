@@ -2,8 +2,7 @@ from itertools import islice
 from abc import ABCMeta, abstractmethod, abstractstaticmethod
 from dataclasses import dataclass
 from functools import partial
-from typing import List
-import matplotlib.pyplot as plt
+from typing import List, no_type_check
 import numpy as np
 from sklearn.base import (
     BaseEstimator,
@@ -13,8 +12,9 @@ from sklearn.base import (
 )
 from sklearn.model_selection import train_test_split
 import torch
-import pdb
 from .model import LassoNet
+from .cox import CoxPHLoss, concordance_index
+
 
 def abstractattr(f):
     return property(abstractmethod(f))
@@ -33,7 +33,6 @@ class HistoryItem:
     l2_regularization_skip: float
     selected: torch.BoolTensor
     n_iters: int
-
 
 
 class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
@@ -57,10 +56,10 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         backtrack=False,
         val_size=0.1,
         device=None,
-        verbose=1,
-        random_state=0,
-        torch_seed=0,
-        weighted_loss=None,
+        verbose=0,
+        random_state=None,
+        torch_seed=None,
+        class_weight=None,
     ):
         """
         Parameters
@@ -113,8 +112,9 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             Random state for validation
         torch_seed
             Torch state for model random initialization
-        weighted_loss : A list, numpy array, or tensor of size C if use weighted loss; None if use non-weighted loss
-            Rescaling weights for different class in training.
+        class_weight : iterable of float, default=None
+            If specified, weights for different classes in training.
+            There must be one number per class.
         """
 
         self.hidden_dims = hidden_dims
@@ -155,11 +155,12 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         self.torch_seed = torch_seed
 
         self.model = None
-        self.weighted_loss = weighted_loss
-        if isinstance(self, LassoNetRegressor) and self.weighted_loss is not None: # weighted loss is only for classifier
-            raise ValueError
-        if self.weighted_loss is not None:
-            self.weighted_loss = torch.FloatTensor(self.weighted_loss).to(self.device)
+        self.class_weight = class_weight
+        if self.class_weight is not None:
+            assert isinstance(
+                self, LassoNetClassifier
+            ), "Weighted loss is only for classification"
+            self.class_weight = torch.FloatTensor(self.class_weight).to(self.device)
 
     @abstractmethod
     def _convert_y(self, y) -> torch.TensorType:
@@ -178,6 +179,8 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
     def _init_model(self, X, y):
         """Create a torch model"""
         output_shape = self._output_shape(y)
+        if self.class_weight is not None:
+            assert output_shape == len(self.class_weight)
         if self.torch_seed is not None:
             torch.manual_seed(self.torch_seed)
         self.model = LassoNet(
@@ -216,7 +219,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
 
         def validation_obj():
             with torch.no_grad():
-               # print(X_val, y_val, self.criterion(model(X_val), y_val).item())
+                # print(X_val, y_val, self.criterion(model(X_val), y_val).item())
                 return (
                     self.criterion(model(X_val), y_val).item()
                     + lambda_ * model.l1_regularization_skip().item()
@@ -271,7 +274,6 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                 # fallback to running loss of first epoch
                 real_loss = loss
             val_obj = validation_obj()
-
             if val_obj < self.tol * best_val_obj:
                 best_val_obj = val_obj
                 epochs_since_best_val_obj = 0
@@ -449,101 +451,6 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         self.model.load_state_dict(state_dict)
         return self
 
-def cox_ph_loss(log_h, durations, events):
-    """Cox loss with Breslow Approximation."""
-    # log_h and events are in descending order rsp. event time
-    # sort the data
-
-    log_h = log_h.view(-1)
-    idx = durations.sort(descending=True)[1]
-    events = events[idx]
-    log_h = log_h[idx]
-    durations = durations[idx]
-
-    # calculate the loss
-    loss = - log_h[events.nonzero()].sum()
-    log_cse = torch.logcumsumexp(log_h, dim=0) 
-    nonzero_ind = (log_cse * events).nonzero()
-    S = log_cse[nonzero_ind].view(-1)  # dense 1d array
-    durations = durations[nonzero_ind].view(-1) 
-
-    _, count = torch.unique_consecutive(durations, return_counts=True) # count bin unique element occurrence times
-    bins_max_loc = count.cumsum(axis=0) - 1 # last item location for each bin
-    loss = loss + (S[bins_max_loc] * count).sum()
-    return loss
-
-class CoxPHLoss(torch.nn.Module):
-    """Loss for CoxPH model. """
-    def forward(self, log_h, y):  
-        durations = y[:,0].clone()
-        events = y[:,1].clone()
-        loss = cox_ph_loss(log_h.clone(), durations, events)  
-        return loss 
-
-class LassoNetCoxRegressor(
-    RegressorMixin,
-    MultiOutputMixin,
-    BaseLassoNet,
-):
-    """Use LassoNet as regressor"""
-    def __init__(self, *args, **kwargs):
-        super(LassoNetCoxRegressor, self).__init__(*args, **kwargs)
-        self.crit = CoxPHLoss() 
-
-    def _convert_y(self, y): 
-        y = torch.FloatTensor(y).to(self.device)
-        return y
-
-    @staticmethod
-    def _output_shape(y):
-        return 1
-
-    @staticmethod
-    def _lambda_max(X, y):
-        n_samples, _ = X.shape
-        return torch.tensor(X.T.dot(y)).abs().max().item() / n_samples
-
-    @property
-    def criterion(self):
-        return self.crit
-
-    def foo(self):
-        return self._foo
-
-    def predict(self, X):
-        with torch.no_grad():
-            ans = self.model(self._cast_input(X))
-        if isinstance(X, np.ndarray):
-            ans = ans.cpu().numpy()
-        return ans
-
-    def c_index_delta(self, duration1, duration2, event1, event2):
-        # return if this pair can be calculated in c-index
-        if int(event1) == 1 and int(event2) == 1:
-            return True
-        if int(event1) == 1 and duration1 <= duration2:
-            return True
-        if int(event2) == 1 and duration1 >= duration2:
-            return True
-        return False
-
-    def score(self, X, y):
-        """Compute the c_inex = # concordance pairs / (# concordance pairs + # discordance)"""
-        durations = y[:,0]
-        events = y[:,1]
-        con_cnt = 0
-        total_cnt = 0
-        with torch.no_grad():
-            pred = self.predict(X)
-            for i in range(events.shape[0]):
-                for j in range(events.shape[0]):
-
-                    if i != j and self.c_index_delta(durations[i], durations[j], events[i], events[j]):
-                        if  durations[j] < durations[i]:
-                            total_cnt += 1
-                            if pred[j] > pred[i]:
-                                con_cnt += 1
-        return con_cnt / total_cnt  
 
 class LassoNetRegressor(
     RegressorMixin,
@@ -582,10 +489,14 @@ class LassoNetClassifier(
     BaseLassoNet,
 ):
     """Use LassoNet as classifier"""
+
     def __init__(self, *args, **kwargs):
-        super(LassoNetClassifier, self).__init__(*args, **kwargs)
-        self.crit = torch.nn.CrossEntropyLoss(weight=self.weighted_loss, reduction="mean")
- 
+        super().__init__(*args, **kwargs)
+        self.criterion = torch.nn.CrossEntropyLoss(
+            weight=self.class_weight, reduction="mean"
+        )
+
+    criterion = None
 
     def _convert_y(self, y) -> torch.TensorType:
         y = torch.LongTensor(y).to(self.device)
@@ -604,10 +515,6 @@ class LassoNetClassifier(
         y_bin[torch.arange(n), y] = True
         return LassoNetRegressor._lambda_max(X, y_bin)
 
-    @property
-    def criterion(self):
-        return self.crit
-
     def predict(self, X):
         with torch.no_grad():
             ans = self.model(self._cast_input(X)).argmax(dim=1)
@@ -621,6 +528,34 @@ class LassoNetClassifier(
         if isinstance(X, np.ndarray):
             ans = ans.cpu().numpy()
         return ans
+
+
+class LassoNetCoxRegressor(
+    BaseLassoNet,
+):
+    """Use LassoNet for Cox regression"""
+
+    def __init__(self, *args, **kwargs):
+        super(LassoNetCoxRegressor, self).__init__(*args, **kwargs)
+        assert self.batch_size is None, "Cox regression does not work with mini-batches"
+
+    criterion = CoxPHLoss()
+    _lambda_max = None
+
+    def _convert_y(self, y):
+        return torch.FloatTensor(y).to(self.device)
+
+    @staticmethod
+    def _output_shape(y):
+        return 1
+
+    predict = LassoNetRegressor.predict
+
+    def score(self, X_test, y_test):
+        """Concordance index"""
+        time, event = y_test.T
+        risk = self.predict(X_test)
+        return concordance_index(risk, time, event)
 
 
 def lassonet_path(X, y, task, *, X_val=None, y_val=None, **kwargs):
@@ -640,12 +575,13 @@ def lassonet_path(X, y, task, *, X_val=None, y_val=None, **kwargs):
 
     See BaseLassoNet for the other parameters.
     """
-    if task == "classification":
-        model = LassoNetClassifier(**kwargs)
-    elif task == "regression":
-        model = LassoNetRegressor(**kwargs)
-    elif task == "cox":
-        model = LassoNetCoxRegressor(**kwargs)
-    else:
+
+    class_ = {
+        "classification": LassoNetClassifier,
+        "regression": LassoNetRegressor,
+        "cox": LassoNetCoxRegressor,
+    }.get(task)
+    if class_ is None:
         raise ValueError('task must be "classification," "regression," or "cox')
+    model = class_(**kwargs)
     return model.path(X, y, X_val=X_val, y_val=y_val)
