@@ -23,7 +23,7 @@ setup(
         "Operating System :: OS Independent",
     ],
     packages=["lassonet"],
-    install_requires=["torch", "scikit-learn", "matplotlib"],
+    install_requires=["torch", "scikit-learn", "matplotlib", "sortedcontainers"],
     tests_require=["pytest"],
     python_requires=">=3.6.5",
 )

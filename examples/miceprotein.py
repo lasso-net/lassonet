@@ -2,12 +2,7 @@
 # coding: utf-8
 
 """
-Lassonet Demo Notebook - PyTorch
-
-This notebook illustrates the Lassonet method for
-feature selection on a classification task.
-We will run Lassonet over
-[the Mice Dataset](https://archive.ics.uci.edu/ml/datasets/Mice%20Protein%20Expression).
+We run Lassonet over [the Mice Dataset](https://archive.ics.uci.edu/ml/datasets/Mice%20Protein%20Expression).
 This dataset consists of protein expression levels measured in the cortex of normal and
 trisomic mice who had been exposed to different experimental conditions.
 Each feature is the expression level of one protein.
@@ -86,3 +81,8 @@ model = LassoNetClassifier(batch_size=64, backtrack=True)
 path = model.path(X_train, y_train)
 plot_path(model, path, X_test, y_test)
 plt.savefig("miceprotein_backtrack_64.png")
+
+model = LassoNetClassifier(class_weight=[0.1, 0.2, 0.3, 0.1, 0.3, 0, 0, 0])
+path = model.path(X_train, y_train)
+plot_path(model, path, X_test, y_test)
+plt.savefig("miceprotein_weighted.png")
