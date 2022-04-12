@@ -24,7 +24,7 @@ class CoxPHLoss(torch.nn.Module):
         event_ind = events.nonzero().flatten()
 
         # numerator
-        log_num = log_h[event_ind].sum()
+        log_num = log_h[event_ind].mean()
 
         # logcumsumexp of events
         event_lgse = torch.logcumsumexp(log_h, dim=0)[event_ind]
@@ -38,12 +38,10 @@ class CoxPHLoss(torch.nn.Module):
         event_pos = event_tie_count.cumsum(axis=0) - 1
 
         # denominator
-        log_den = (event_tie_count * event_lgse[event_pos]).sum()
+        log_den = (event_tie_count * event_lgse[event_pos]).mean()
 
         # loss is negative log likelihood
-        loss = log_den - log_num
-        assert not torch.isnan(loss), log_h.max() - log_h.min()
-        return loss
+        return log_den - log_num
 
 
 def concordance_index(risk, time, event):
