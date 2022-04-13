@@ -172,6 +172,13 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                 self, LassoNetClassifier
             ), "Weighted loss is only for classification"
             self.class_weight = torch.FloatTensor(self.class_weight).to(self.device)
+            self.criterion = torch.nn.CrossEntropyLoss(
+                weight=self.class_weight, reduction="mean"
+            )
+        if isinstance(self, LassoNetCoxRegressor):
+            assert (
+                self.batch_size is None
+            ), "Cox regression does not work with mini-batches"
 
     @abstractmethod
     def _convert_y(self, y) -> torch.TensorType:
@@ -487,12 +494,6 @@ class LassoNetClassifier(
 ):
     """Use LassoNet as classifier"""
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.criterion = torch.nn.CrossEntropyLoss(
-            weight=self.class_weight, reduction="mean"
-        )
-
     criterion = None
 
     def _convert_y(self, y) -> torch.TensorType:
@@ -531,10 +532,6 @@ class LassoNetCoxRegressor(
     BaseLassoNet,
 ):
     """Use LassoNet for Cox regression"""
-
-    def __init__(self, *args, **kwargs):
-        super(LassoNetCoxRegressor, self).__init__(*args, **kwargs)
-        assert self.batch_size is None, "Cox regression does not work with mini-batches"
 
     criterion = CoxPHLoss()
     _lambda_max = None
