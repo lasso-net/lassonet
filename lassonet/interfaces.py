@@ -2,7 +2,7 @@ from itertools import islice
 from abc import ABCMeta, abstractmethod, abstractstaticmethod
 from dataclasses import dataclass
 from functools import partial
-from typing import List, no_type_check
+from typing import List
 import numpy as np
 from sklearn.base import (
     BaseEstimator,
@@ -33,6 +33,17 @@ class HistoryItem:
     l2_regularization_skip: float
     selected: torch.BoolTensor
     n_iters: int
+
+    def log(item):
+        print(
+            f"{item.n_iters} epochs, "
+            f"val_objective "
+            f"{item.val_objective:.2e}, "
+            f"val_loss "
+            f"{item.val_loss:.2e}, "
+            f"regularization {item.regularization:.2e}, "
+            f"l2_regularization {item.l2_regularization:.2e}"
+        )
 
 
 class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
@@ -95,7 +106,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             Maximum number of training epochs for initial training and path computation.
             This is an upper-bound on the effective number of epochs, since the model
             uses early stopping.
-        patience : int or pair of int, default=10
+        patience : int or pair of int or None, default=10
             Number of epochs to wait without improvement during early stopping.
         tol : float, default=0.99
             Minimum improvement for early stopping: new objective < tol * old objective.
@@ -161,6 +172,13 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                 self, LassoNetClassifier
             ), "Weighted loss is only for classification"
             self.class_weight = torch.FloatTensor(self.class_weight).to(self.device)
+            self.criterion = torch.nn.CrossEntropyLoss(
+                weight=self.class_weight, reduction="mean"
+            )
+        if isinstance(self, LassoNetCoxRegressor):
+            assert (
+                self.batch_size is None
+            ), "Cox regression does not work with mini-batches"
 
     @abstractmethod
     def _convert_y(self, y) -> torch.TensorType:
@@ -219,7 +237,6 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
 
         def validation_obj():
             with torch.no_grad():
-                # print(X_val, y_val, self.criterion(model(X_val), y_val).item())
                 return (
                     self.criterion(model(X_val), y_val).item()
                     + lambda_ * model.l1_regularization_skip().item()
@@ -265,10 +282,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                     return ans
 
                 optimizer.step(closure)
-                if lambda_:
-                    model.prox(
-                        lambda_=lambda_ * optimizer.param_groups[0]["lr"], M=self.M
-                    )
+                model.prox(lambda_=lambda_ * optimizer.param_groups[0]["lr"], M=self.M)
 
             if epoch == 0:
                 # fallback to running loss of first epoch
@@ -315,15 +329,11 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
     def predict(self, X):
         raise NotImplementedError
 
-    @abstractstaticmethod
-    def _lambda_max(X, y):
-        raise NotImplementedError
-
     def path(self, X, y, *, X_val=None, y_val=None) -> List[HistoryItem]:
         """Train LassoNet on a lambda_ path.
         The path is defined by the class parameters:
-        start at `eps * lambda_max` and increment according
-        to `path_multiplier` or `n_lambdas`.
+        start at `lambda_start` or `eps * val_loss` and
+        increment according to `path_multiplier` or `n_lambdas`.
         The path will stop when no feature is being used anymore.
         """
         assert (X_val is None) == (
@@ -358,11 +368,8 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             )
         )
         if self.verbose:
-            print(
-                f"Initialized dense model in {hist[-1].n_iters} epochs, "
-                f"val loss {hist[-1].val_loss:.2e}, "
-                f"regularization {hist[-1].regularization:.2e}"
-            )
+            print(f"Initialized dense model")
+            hist[-1].log()
 
         # build lambda_seq
         lambda_seq = self.lambda_seq
@@ -402,15 +409,8 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                 print(
                     f"Lambda = {current_lambda:.2e}, "
                     f"selected {self.model.selected_count()} features "
-                    f"in {last.n_iters} epochs"
                 )
-                print(
-                    f"val_objective "
-                    f"{last.val_objective:.2e}, "
-                    f"val_loss "
-                    f"{last.val_loss:.2e}, "
-                    f"regularization {last.regularization:.2e}"
-                )
+                last.log()
 
         self.feature_importances_ = self._compute_feature_importances(hist)
         """When does each feature disappear on the path?"""
@@ -469,11 +469,6 @@ class LassoNetRegressor(
     def _output_shape(y):
         return y.shape[1]
 
-    @staticmethod
-    def _lambda_max(X, y):
-        n_samples, _ = X.shape
-        return torch.tensor(X.T.dot(y)).abs().max().item() / n_samples
-
     criterion = torch.nn.MSELoss(reduction="mean")
 
     def predict(self, X):
@@ -490,12 +485,6 @@ class LassoNetClassifier(
 ):
     """Use LassoNet as classifier"""
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.criterion = torch.nn.CrossEntropyLoss(
-            weight=self.class_weight, reduction="mean"
-        )
-
     criterion = None
 
     def _convert_y(self, y) -> torch.TensorType:
@@ -506,14 +495,6 @@ class LassoNetClassifier(
     @staticmethod
     def _output_shape(y):
         return (y.max() + 1).item()
-
-    @staticmethod
-    def _lambda_max(X, y):
-        n = len(y)
-        d = LassoNetClassifier._output_shape(y)
-        y_bin = torch.full((n, d), False)
-        y_bin[torch.arange(n), y] = True
-        return LassoNetRegressor._lambda_max(X, y_bin)
 
     def predict(self, X):
         with torch.no_grad():
@@ -535,12 +516,7 @@ class LassoNetCoxRegressor(
 ):
     """Use LassoNet for Cox regression"""
 
-    def __init__(self, *args, **kwargs):
-        super(LassoNetCoxRegressor, self).__init__(*args, **kwargs)
-        assert self.batch_size is None, "Cox regression does not work with mini-batches"
-
     criterion = CoxPHLoss()
-    _lambda_max = None
 
     def _convert_y(self, y):
         return torch.FloatTensor(y).to(self.device)
