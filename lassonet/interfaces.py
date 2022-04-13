@@ -329,15 +329,11 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
     def predict(self, X):
         raise NotImplementedError
 
-    @abstractstaticmethod
-    def _lambda_max(X, y):
-        raise NotImplementedError
-
     def path(self, X, y, *, X_val=None, y_val=None) -> List[HistoryItem]:
         """Train LassoNet on a lambda_ path.
         The path is defined by the class parameters:
-        start at `eps * lambda_max` and increment according
-        to `path_multiplier` or `n_lambdas`.
+        start at `lambda_start` or `eps * val_loss` and
+        increment according to `path_multiplier` or `n_lambdas`.
         The path will stop when no feature is being used anymore.
         """
         assert (X_val is None) == (
@@ -473,11 +469,6 @@ class LassoNetRegressor(
     def _output_shape(y):
         return y.shape[1]
 
-    @staticmethod
-    def _lambda_max(X, y):
-        n_samples, _ = X.shape
-        return torch.tensor(X.T.dot(y)).abs().max().item() / n_samples
-
     criterion = torch.nn.MSELoss(reduction="mean")
 
     def predict(self, X):
@@ -505,14 +496,6 @@ class LassoNetClassifier(
     def _output_shape(y):
         return (y.max() + 1).item()
 
-    @staticmethod
-    def _lambda_max(X, y):
-        n = len(y)
-        d = LassoNetClassifier._output_shape(y)
-        y_bin = torch.full((n, d), False)
-        y_bin[torch.arange(n), y] = True
-        return LassoNetRegressor._lambda_max(X, y_bin)
-
     def predict(self, X):
         with torch.no_grad():
             ans = self.model(self._cast_input(X)).argmax(dim=1)
@@ -534,7 +517,6 @@ class LassoNetCoxRegressor(
     """Use LassoNet for Cox regression"""
 
     criterion = CoxPHLoss()
-    _lambda_max = None
 
     def _convert_y(self, y):
         return torch.FloatTensor(y).to(self.device)
