@@ -485,7 +485,7 @@ class LassoNetClassifier(
 ):
     """Use LassoNet as classifier"""
 
-    criterion = None
+    criterion = torch.nn.CrossEntropyLoss(reduction="mean")
 
     def _convert_y(self, y) -> torch.TensorType:
         y = torch.LongTensor(y).to(self.device)
