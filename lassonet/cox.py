@@ -38,7 +38,11 @@ class CoxPHLoss(torch.nn.Module):
         event_pos = event_tie_count.cumsum(axis=0) - 1
 
         # denominator
-        log_den = (event_tie_count * event_lgse[event_pos]).mean()
+        log_den = (
+            (event_tie_count * event_lgse[event_pos]).mean()
+            * len(event_pos)
+            / len(event_ind)
+        )
 
         # loss is negative log likelihood
         return log_den - log_num
