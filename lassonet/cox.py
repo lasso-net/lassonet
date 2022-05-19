@@ -7,9 +7,17 @@ __all__ = ["CoxPHLoss", "concordance_index"]
 import torch
 from sortedcontainers import SortedList
 
+from .utils import log_substract, scatter_logsumexp
+
 
 class CoxPHLoss(torch.nn.Module):
     """Loss for CoxPH model. """
+
+    allowed = ("breslow", "efron")
+
+    def __init__(self, method="breslow"):
+        assert method in self.allowed, "Method must be one of %s" % self.allowed
+        self.method = method
 
     def forward(self, log_h, y):
         log_h = log_h.flatten()
@@ -27,22 +35,35 @@ class CoxPHLoss(torch.nn.Module):
         log_num = log_h[event_ind].mean()
 
         # logcumsumexp of events
-        event_lgse = torch.logcumsumexp(log_h, dim=0)[event_ind]
+        event_lcse = torch.logcumsumexp(log_h, dim=0)[event_ind]
 
         # number of events for each unique risk set
-        _, event_tie_count = torch.unique_consecutive(
-            durations[event_ind], return_counts=True
+        _, tie_inverses, tie_count = torch.unique_consecutive(
+            durations[event_ind], return_counts=True, return_inverse=True
         )
 
-        # position of last event (lowest duration) with of each unique risk set
-        event_pos = event_tie_count.cumsum(axis=0) - 1
+        # position of last event (lowest duration) of each unique risk set
+        tie_pos = tie_count.cumsum(axis=0) - 1
 
-        # denominator
-        log_den = (
-            (event_tie_count * event_lgse[event_pos]).mean()
-            * len(event_pos)
-            / len(event_ind)
-        )
+        # logcumsumexp by tie for each event
+        event_tie_lcse = event_lcse[tie_pos][tie_inverses]
+
+        if self.method == "breslow":
+            log_den = event_tie_lcse.mean()
+
+        elif self.method == "efron":
+            # based on https://bydmitry.github.io/efron-tensorflow.html
+
+            # logsumexp of ties, duplicated within tie set
+            tie_lse = scatter_logsumexp(event_ind, tie_inverses, dim=0)[tie_inverses]
+            # multiply (add in log space) with corrective factor
+            aux = torch.ones_like(tie_inverses)
+            aux[tie_pos[:-1] + 1] -= tie_count[:-1]
+            event_id_in_tie = torch.cumsum(aux, dim=0) - 1
+            tie_lse += torch.log(event_id_in_tie) - torch.log(tie_count[tie_inverses])
+
+            # denominator
+            log_den = log_substract(event_tie_lcse, tie_lse).mean()
 
         # loss is negative log likelihood
         return log_den - log_num

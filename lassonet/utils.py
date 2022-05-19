@@ -1,5 +1,31 @@
 import matplotlib.pyplot as plt
-from functools import partial
+import torch
+
+__all__ = ["plot_path"]
+
+
+def scatter_logsumexp(input, index, *, dim=-1, output_size=None):
+    """Inspired by torch_scatter.logsumexp
+    Uses torch.scatter_reduce for performance
+    """
+    max_value_per_index = torch.scatter_reduce(
+        input, dim=dim, index=index, output_size=output_size, reduce="amax"
+    )
+    max_per_src_element = max_value_per_index.gather(dim, index)
+    recentered_scores = input - max_per_src_element
+    sum_per_index = torch.scatter_reduce(
+        recentered_scores.exp(),
+        dim=dim,
+        index=index,
+        output_size=output_size,
+        reduce="sum",
+    )
+    return max_value_per_index + sum_per_index.log()
+
+
+def log_substract(x, y):
+    """log(exp(x) - exp(y))"""
+    return x + torch.log1p(-(y - x).exp())
 
 
 def plot_path(model, path, X_test, y_test, *, score_function=None):
