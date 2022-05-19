@@ -520,7 +520,7 @@ class LassoNetCoxRegressor(
 ):
     """Use LassoNet for Cox regression"""
 
-    criterion = CoxPHLoss()
+    criterion = None
 
     def _convert_y(self, y):
         return torch.FloatTensor(y).to(self.device)
