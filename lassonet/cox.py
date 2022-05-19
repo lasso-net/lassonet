@@ -15,8 +15,9 @@ class CoxPHLoss(torch.nn.Module):
 
     allowed = ("breslow", "efron")
 
-    def __init__(self, method="breslow"):
-        assert method in self.allowed, "Method must be one of %s" % self.allowed
+    def __init__(self, method):
+        super().__init__()
+        assert method in self.allowed, f"Method must be one of {self.allowed}"
         self.method = method
 
     def forward(self, log_h, y):

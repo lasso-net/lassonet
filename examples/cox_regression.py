@@ -20,9 +20,25 @@ model = LassoNetCoxRegressor(
     path_multiplier=1.02,
     gamma=1,
     verbose=True,
+    tie_approximation="breslow",
 )
 
 path = model.path(X_train, y_train)
 
 plot_path(model, path, X_test, y_test)
 plt.savefig("cox_regression.png")
+
+
+model = LassoNetCoxRegressor(
+    hidden_dims=(100,),
+    lambda_start=1e-2,
+    path_multiplier=1.02,
+    gamma=1,
+    verbose=True,
+    tie_approximation="efron",
+)
+
+path = model.path(X_train, y_train)
+
+plot_path(model, path, X_test, y_test)
+plt.savefig("cox_regression_efron.png")

@@ -71,6 +71,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         random_state=None,
         torch_seed=None,
         class_weight=None,
+        tie_approximation=None,
     ):
         """
         Parameters
@@ -126,6 +127,8 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         class_weight : iterable of float, default=None
             If specified, weights for different classes in training.
             There must be one number per class.
+        tie_approximation: str
+            Tie approximation for the Cox model, must be one of ("breslow", "efron").
         """
 
         self.hidden_dims = hidden_dims
@@ -179,6 +182,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             assert (
                 self.batch_size is None
             ), "Cox regression does not work with mini-batches"
+            self.criterion = CoxPHLoss(method=tie_approximation)
 
     @abstractmethod
     def _convert_y(self, y) -> torch.TensorType:
