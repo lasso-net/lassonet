@@ -65,7 +65,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         patience=(100, 10),
         tol=0.99,
         backtrack=False,
-        val_size=0.1,
+        val_size=None,
         device=None,
         verbose=0,
         random_state=None,
@@ -113,8 +113,10 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             Minimum improvement for early stopping: new objective < tol * old objective.
         backtrack : bool, default=False
             If true, ensures the objective function decreases.
-        val_size : float, default=0.1
+        val_size : float, default=None
             Proportion of data to use for early stopping.
+            0 means that training data is used. To disable early stopping, set patience=None.
+            Default is 0.1 for all models except Cox for which training data is used.
             If X_val and y_val are given during training, it will be ignored.
         device : torch device, default=None
             Device on which to train the model using PyTorch.
@@ -158,7 +160,13 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         self.patience = self.patience_init, self.patience_path = patience
         self.tol = tol
         self.backtrack = backtrack
+        if val_size is None:
+            if isinstance(self, LassoNetCoxRegressor):
+                val_size = 0
+            else:
+                val_size = 0.1
         self.val_size = val_size
+
         if device is None:
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.device = device
@@ -343,7 +351,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         assert (X_val is None) == (
             y_val is None
         ), "You must specify both or none of X_val and y_val"
-        sample_val = X_val is None
+        sample_val = self.val_size != 0 and X_val is None
         if sample_val:
             X_train, X_val, y_train, y_val = train_test_split(
                 X, y, test_size=self.val_size, random_state=self.random_state
