@@ -52,7 +52,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         self,
         *,
         hidden_dims=(100,),
-        eps_start=1,
+        eps_start=None,
         lambda_start=None,
         lambda_seq=None,
         gamma=0.0,
@@ -136,6 +136,11 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         """
 
         self.hidden_dims = hidden_dims
+        assert (eps_start is None) + (
+            lambda_start is None
+        ) < 2, "You cannot provide both `eps_start` and `lambda_start`"
+        if eps_start is None:
+            eps_start = 1
         self.eps_start = eps_start
         self.lambda_start = lambda_start
         self.lambda_seq = lambda_seq
