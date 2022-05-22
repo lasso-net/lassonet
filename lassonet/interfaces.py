@@ -633,6 +633,7 @@ class BaseLassoNetCV(BaseLassoNet, metaclass=ABCMeta):
         self.path_ = self.path(
             X, y, lambda_max=self.best_lambda_, return_state_dicts=False
         )
+        self.best_selected_ = self.path_[-1].selected
         return self
 
 
