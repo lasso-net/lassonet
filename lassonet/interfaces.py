@@ -627,7 +627,7 @@ class BaseLassoNetCV(BaseLassoNet, metaclass=ABCMeta):
         best_lambda_idx = avg_scores.argmax()
         self.best_lambda_ = lambdas[best_lambda_idx]
         self.best_cv_score_ = avg_scores[best_lambda_idx]
-        self.best_cv_score_std_ = scores[best_lambda_idx].mean(axis=1)
+        self.best_cv_score_std_ = scores[best_lambda_idx].mean()
 
         self.path_ = self.path(
             X, y, lambda_max=self.best_lambda_, return_state_dicts=False
