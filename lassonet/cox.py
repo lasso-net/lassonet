@@ -56,15 +56,21 @@ class CoxPHLoss(torch.nn.Module):
             # based on https://bydmitry.github.io/efron-tensorflow.html
 
             # logsumexp of ties, duplicated within tie set
-            tie_lse = scatter_logsumexp(event_ind, tie_inverses, dim=0)[tie_inverses]
+            tie_lse = scatter_logsumexp(log_h[event_ind], tie_inverses, dim=0)[
+                tie_inverses
+            ]
             # multiply (add in log space) with corrective factor
             aux = torch.ones_like(tie_inverses)
             aux[tie_pos[:-1] + 1] -= tie_count[:-1]
             event_id_in_tie = torch.cumsum(aux, dim=0) - 1
-            tie_lse += torch.log(event_id_in_tie) - torch.log(tie_count[tie_inverses])
+            discounted_tie_lse = (
+                tie_lse
+                + torch.log(event_id_in_tie)
+                - torch.log(tie_count[tie_inverses])
+            )
 
             # denominator
-            log_den = log_substract(event_tie_lcse, tie_lse).mean()
+            log_den = log_substract(event_tie_lcse, discounted_tie_lse).mean()
 
         # loss is negative log likelihood
         return log_den - log_num
