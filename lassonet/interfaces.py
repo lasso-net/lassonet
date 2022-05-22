@@ -134,7 +134,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         tie_approximation: str
             Tie approximation for the Cox model, must be one of ("breslow", "efron").
         """
-
+        assert isinstance(hidden_dims, tuple), "`hidden_dims` must be a tuple"
         self.hidden_dims = hidden_dims
         assert (eps_start is not None) + (
             lambda_start is not None
