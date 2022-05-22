@@ -93,7 +93,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             l2 penalization on the network
         gamma : float, default=0.0
             l2 penalization on the skip connection
-        path_multiplier : float
+        path_multiplier : float, default=1.02
             Multiplicative factor (:math:`1 + \\epsilon`) to increase
             the penalty parameter over the path
         M : float, default=10.0
@@ -136,8 +136,8 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         """
 
         self.hidden_dims = hidden_dims
-        assert (eps_start is None) + (
-            lambda_start is None
+        assert (eps_start is not None) + (
+            lambda_start is not None
         ) < 2, "You cannot provide both `eps_start` and `lambda_start`"
         if eps_start is None:
             eps_start = 1
@@ -617,12 +617,14 @@ class BaseLassoNetCV(BaseLassoNet, metaclass=ABCMeta):
             split_scores += [split_scores[-1]] * (max_length - len(split_scores))
 
         self.lambdas_ = lambdas
-        self.scores_ = scores
+        self.scores_ = scores = np.array(scores).T
 
-        best_lambda_idx = max(
-            range(max_length), key=np.mean(scores, axis=0).__getitem__
-        )
+        avg_scores = np.mean(scores, axis=1)
+        best_lambda_idx = avg_scores.argmax()
         self.best_lambda_ = lambdas[best_lambda_idx]
+        self.best_cv_score_ = avg_scores[best_lambda_idx]
+        self.best_cv_score_std_ = scores[best_lambda_idx].mean(axis=1)
+
         self.path_ = self.path(
             X, y, lambda_max=self.best_lambda_, return_state_dicts=False
         )
