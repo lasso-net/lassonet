@@ -198,6 +198,10 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             assert (
                 self.batch_size is None
             ), "Cox regression does not work with mini-batches"
+            assert (
+                tie_approximation in CoxPHLoss.allowed
+            ), f"`tie_approximation` must be one of {CoxPHLoss.allowed}"
+
             self.criterion = CoxPHLoss(method=tie_approximation)
 
     @abstractmethod
@@ -378,7 +382,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                 X, y, test_size=self.val_size, random_state=self.random_state
             )
         else:
-            X_train, y_train = X, y
+            X_val, y_val = X, y
         X_train, y_train = self._cast_input(X_train, y_train)
         X_val, y_val = self._cast_input(X_val, y_val)
 
