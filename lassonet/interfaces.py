@@ -115,7 +115,8 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             If true, ensures the objective function decreases.
         val_size : float, default=None
             Proportion of data to use for early stopping.
-            0 means that training data is used. To disable early stopping, set patience=None.
+            0 means that training data is used.
+            To disable early stopping, set patience=None.
             Default is 0.1 for all models except Cox for which training data is used.
             If X_val and y_val are given during training, it will be ignored.
         device : torch device, default=None
@@ -161,6 +162,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         self.tol = tol
         self.backtrack = backtrack
         if val_size is None:
+            # TODO: use a cv parameter following sklearn's interface
             if isinstance(self, LassoNetCoxRegressor):
                 val_size = 0
             else:
