@@ -9,8 +9,9 @@ from sklearn.base import (
     ClassifierMixin,
     MultiOutputMixin,
     RegressorMixin,
+    clone,
 )
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import check_cv, train_test_split
 import torch
 from .model import LassoNet
 from .cox import CoxPHLoss, concordance_index
@@ -245,6 +246,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         epochs,
         lambda_,
         optimizer,
+        return_state_dict,
         patience=None,
     ) -> HistoryItem:
         model = self.model
@@ -327,7 +329,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             l2_regularization_skip = self.model.l2_regularization_skip()
         return HistoryItem(
             lambda_=lambda_,
-            state_dict=self.model.cpu_state_dict(),
+            state_dict=self.model.cpu_state_dict() if return_state_dict else None,
             objective=loss + lambda_ * reg,
             loss=loss,
             val_objective=val_obj,
@@ -343,7 +345,9 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
     def predict(self, X):
         raise NotImplementedError
 
-    def path(self, X, y, *, X_val=None, y_val=None) -> List[HistoryItem]:
+    def path(
+        self, X, y, *, X_val=None, y_val=None, return_state_dicts=True
+    ) -> List[HistoryItem]:
         """Train LassoNet on a lambda_ path.
         The path is defined by the class parameters:
         start at `lambda_start` or `eps * val_loss` and
@@ -379,6 +383,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                 epochs=self.n_iters_init,
                 optimizer=self.optim_init(self.model.parameters()),
                 patience=self.patience_init,
+                return_state_dict=return_state_dicts,
             )
         )
         if self.verbose:
@@ -416,6 +421,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                     epochs=self.n_iters_path,
                     optimizer=optimizer,
                     patience=self.patience_path,
+                    return_state_dict=return_state_dicts,
                 )
             )
             last = hist[-1]
@@ -523,6 +529,25 @@ class LassoNetClassifier(
         if isinstance(X, np.ndarray):
             ans = ans.cpu().numpy()
         return ans
+
+
+class BaseLassoNetCV(BaseLassoNet, metaclass=ABCMeta):
+    def __init__(self, cv=None, **kwargs):
+        """
+        See BaseLassoNet for the parameters
+
+        cv : int, cross-validation generator or iterable, default=None
+            Determines the cross-validation splitting strategy.
+            Default is 5-fold cross-validation.
+            See <https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.check_cv.html>
+        """
+        super().__init__(**kwargs)
+        self.cv = check_cv(cv)
+
+    def fit(self, X, y):
+        """"""
+        for X_split, y_split in self.cv.split(X, y):
+            path = self.path(BaseLassoNet)
 
 
 class LassoNetCoxRegressor(
