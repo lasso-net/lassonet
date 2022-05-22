@@ -9,10 +9,10 @@ from sklearn.base import (
     ClassifierMixin,
     MultiOutputMixin,
     RegressorMixin,
-    clone,
 )
 from sklearn.model_selection import check_cv, train_test_split
 import torch
+from tqdm import tqdm
 from .model import LassoNet
 from .cox import CoxPHLoss, concordance_index
 
@@ -25,9 +25,9 @@ def abstractattr(f):
 class HistoryItem:
     lambda_: float
     state_dict: dict
-    objective: float  # loss + lambda_ * regulatization
+    objective: float  # loss + lambda_ * regularization
     loss: float
-    val_objective: float  # val_loss + lambda_ * regulatization
+    val_objective: float  # val_loss + lambda_ * regularization
     val_loss: float
     regularization: float
     l2_regularization: float
@@ -232,7 +232,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         Note that if `lambda_` is not given, the trained model
         will most likely not use any feature.
         """
-        self.path(X, y, X_val=X_val, y_val=y_val)
+        self.path_ = self.path(X, y, X_val=X_val, y_val=y_val, return_state_dicts=False)
         return self
 
     def _train(
@@ -346,13 +346,23 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         raise NotImplementedError
 
     def path(
-        self, X, y, *, X_val=None, y_val=None, return_state_dicts=True
+        self,
+        X,
+        y,
+        *,
+        X_val=None,
+        y_val=None,
+        lambda_max=float("inf"),
+        return_state_dicts=True,
+        callback=None,
     ) -> List[HistoryItem]:
         """Train LassoNet on a lambda_ path.
         The path is defined by the class parameters:
         start at `lambda_start` or `eps * val_loss` and
         increment according to `path_multiplier` or `n_lambdas`.
         The path will stop when no feature is being used anymore.
+
+        callback will be called at each step on (model, history)
         """
         assert (X_val is None) == (
             y_val is None
@@ -386,6 +396,8 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                 return_state_dict=return_state_dicts,
             )
         )
+        if callback is not None:
+            callback(self, hist)
         if self.verbose:
             print(f"Initialized dense model")
             hist[-1].log()
@@ -395,7 +407,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         if lambda_seq is None:
 
             def _lambda_seq(start):
-                while True:
+                while start <= lambda_max:
                     yield start
                     start *= self.path_multiplier
 
@@ -410,21 +422,22 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         for current_lambda in lambda_seq:
             if self.model.selected_count() == 0:
                 break
-            hist.append(
-                self._train(
-                    X_train,
-                    y_train,
-                    X_val,
-                    y_val,
-                    batch_size=self.batch_size,
-                    lambda_=current_lambda,
-                    epochs=self.n_iters_path,
-                    optimizer=optimizer,
-                    patience=self.patience_path,
-                    return_state_dict=return_state_dicts,
-                )
+            last = self._train(
+                X_train,
+                y_train,
+                X_val,
+                y_val,
+                batch_size=self.batch_size,
+                lambda_=current_lambda,
+                epochs=self.n_iters_path,
+                optimizer=optimizer,
+                patience=self.patience_path,
+                return_state_dict=return_state_dicts,
             )
-            last = hist[-1]
+            hist.append(last)
+            if callback is not None:
+                callback(self, hist)
+
             if self.verbose:
                 print(
                     f"Lambda = {current_lambda:.2e}, "
@@ -531,25 +544,6 @@ class LassoNetClassifier(
         return ans
 
 
-class BaseLassoNetCV(BaseLassoNet, metaclass=ABCMeta):
-    def __init__(self, cv=None, **kwargs):
-        """
-        See BaseLassoNet for the parameters
-
-        cv : int, cross-validation generator or iterable, default=None
-            Determines the cross-validation splitting strategy.
-            Default is 5-fold cross-validation.
-            See <https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.check_cv.html>
-        """
-        super().__init__(**kwargs)
-        self.cv = check_cv(cv)
-
-    def fit(self, X, y):
-        """"""
-        for X_split, y_split in self.cv.split(X, y):
-            path = self.path(BaseLassoNet)
-
-
 class LassoNetCoxRegressor(
     BaseLassoNet,
 ):
@@ -571,6 +565,75 @@ class LassoNetCoxRegressor(
         time, event = y_test.T
         risk = self.predict(X_test)
         return concordance_index(risk, time, event)
+
+
+class BaseLassoNetCV(BaseLassoNet, metaclass=ABCMeta):
+    def __init__(self, cv=None, **kwargs):
+        """
+        See BaseLassoNet for the parameters
+
+        cv : int, cross-validation generator or iterable, default=None
+            Determines the cross-validation splitting strategy.
+            Default is 5-fold cross-validation.
+            See <https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.check_cv.html>
+        """
+        super().__init__(**kwargs)
+        self.cv = check_cv(cv)
+
+    # TODO: add plotting method
+
+    def fit(self, X, y):
+        # compute scores for each split
+        lambdas = []
+        scores = []
+        for train_index, test_index in tqdm(
+            self.cv.split(X, y),
+            total=self.cv.get_n_splits(X, y),
+            desc="Choosing lambda with cross-validation",
+        ):
+            split_scores = []
+            scores.append(split_scores)
+
+            def callback(model, hist):
+                if len(hist) == len(lambdas) + 1:
+                    lambdas.append(hist[-1].lambda_)
+                split_scores.append(model.score(X[test_index], y[test_index]))
+
+            self.path(
+                X[train_index],
+                y[train_index],
+                return_state_dicts=False,  # avoid memory cost
+                callback=callback,
+            )
+
+        # pad
+        max_length = max(map(len, scores))
+        for split_scores in scores:
+            split_scores += [split_scores[-1]] * (max_length - len(split_scores))
+
+        self.lambdas_ = lambdas
+        self.scores_ = scores
+
+        best_lambda_idx = max(
+            range(max_length), key=np.mean(scores, axis=0).__getitem__
+        )
+        self.best_lambda_ = lambdas[best_lambda_idx]
+        self.path_ = self.path(
+            X, y, lambda_max=self.best_lambda_, return_state_dicts=False
+        )
+        return self
+
+
+class LassoNetRegressorCV(BaseLassoNetCV, LassoNetRegressor):
+    pass
+
+
+class LassoNetClassifierCV(BaseLassoNetCV, LassoNetClassifier):
+    pass
+
+
+class LassoNetCoxRegressorCV(BaseLassoNetCV, LassoNetCoxRegressor):
+    pass
 
 
 def lassonet_path(X, y, task, *, X_val=None, y_val=None, **kwargs):
