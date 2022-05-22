@@ -21,6 +21,16 @@ pip install lassonet
 
 Our plan is to add more functionality that help users understand the important features in neural networks.
 
+## Usage
+
+```
+from lassonet import LassoNetClassifierCV 
+model = LassoNetClassifierCV() # LassoNetRegressorCV
+path = model.fit(X_train, y_train)
+print("Best model scored", model.score(X_test, y_test))
+print("Lambda =", model.best_lambda_)
+```
+
 ### Website
 
 LassoNet's website is [https://lassonet.ml](https://lassonet.ml). It contains many useful references including the paper, live talks and additional documentation.
