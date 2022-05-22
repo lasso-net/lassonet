@@ -68,7 +68,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         backtrack=False,
         val_size=None,
         device=None,
-        verbose=0,
+        verbose=1,
         random_state=None,
         torch_seed=None,
         class_weight=None,
@@ -123,7 +123,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         device : torch device, default=None
             Device on which to train the model using PyTorch.
             Default: GPU if available else CPU
-        verbose : int, default=0
+        verbose : int, default=1
         random_state
             Random state for validation
         torch_seed
@@ -407,7 +407,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         )
         if callback is not None:
             callback(self, hist)
-        if self.verbose:
+        if self.verbose > 1:
             print(f"Initialized dense model")
             hist[-1].log()
 
@@ -447,7 +447,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             if callback is not None:
                 callback(self, hist)
 
-            if self.verbose:
+            if self.verbose > 1:
                 print(
                     f"Lambda = {current_lambda:.2e}, "
                     f"selected {self.model.selected_count()} features "
@@ -599,6 +599,7 @@ class BaseLassoNetCV(BaseLassoNet, metaclass=ABCMeta):
             self.cv.split(X, y),
             total=self.cv.get_n_splits(X, y),
             desc="Choosing lambda with cross-validation",
+            disable=self.verbose == 0,
         ):
             split_scores = []
             scores.append(split_scores)
