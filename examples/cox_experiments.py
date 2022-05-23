@@ -11,6 +11,8 @@ import sksurv.datasets
 
 from lassonet import LassoNetCoxRegressorCV
 
+from joblib import Parallel, delayed
+from tqdm_joblib import tqdm_joblib
 
 DATA_PATH = Path(__file__).parent / "data"
 
@@ -91,7 +93,9 @@ def load_data(dataset):
     return X, y
 
 
-def run(X, y, *, random_state, dump_splits=False, verbose=False):
+def run(
+    X, y, *, random_state, tie_approximation="breslow", dump_splits=False, verbose=False
+):
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, random_state=random_state, stratify=y[:, 1], test_size=0.20
     )
@@ -112,7 +116,7 @@ def run(X, y, *, random_state, dump_splits=False, verbose=False):
     )
 
     model = LassoNetCoxRegressorCV(
-        tie_approximation="breslow",
+        tie_approximation=tie_approximation,
         hidden_dims=(32,),
         path_multiplier=1.01,
         cv=cv,
@@ -133,14 +137,19 @@ def run(X, y, *, random_state, dump_splits=False, verbose=False):
 
 if __name__ == "__main__":
     """
-    run with python3 script.py dataset
+    run with python3 script.py dataset [method]
 
     dataset=all runs all experiments
+
+    method can be "breslow" or "efron" (default "breslow")
+
+    requires joblib and tqdm_joblib
     """
 
     import sys
 
     dataset = sys.argv[1]
+    tie_approximation = sys.argv[2] if len(sys.argv) > 2 else "breslow"
     if dataset == "all":
         datasets = ["breast", "whas500", "veterans", "hnscc"]
         verbose = False
@@ -149,15 +158,24 @@ if __name__ == "__main__":
         verbose = 1
     for dataset in datasets:
         X, y = load_data(dataset)
-        scores = np.array(
-            [
-                run(X, y, random_state=random_state)
-                for random_state in tqdm(
-                    range(10), desc=f"Running {dataset} with different seeds"
+
+        n_runs = 10
+        n_jobs = 5  # set to a divisor of `n_runs` for maximal efficiency
+
+        with tqdm_joblib(desc=f"Running on {dataset}", total=n_runs):
+            scores = np.array(
+                Parallel(n_jobs=n_jobs)(
+                    delayed(run)(
+                        X,
+                        y,
+                        tie_approximation=tie_approximation,
+                        random_state=random_state,
+                    )
+                    for random_state in range(n_runs)
                 )
-            ]
-        )
-        print(f"Final score for {dataset}: {scores.mean()} ± {scores.std()}")
+            )
+
+        tqdm.write(f"Final score for {dataset}: {scores.mean()} ± {scores.std()}")
 
 
 # import optuna
