@@ -4,7 +4,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from .prox import inplace_prox
+from .prox import inplace_prox, prox
 
 
 class LassoNet(nn.Module):
@@ -42,6 +42,38 @@ class LassoNet(nn.Module):
                 lambda_bar=lambda_bar,
                 M=M,
             )
+
+    def lambda_start(
+        self,
+        M=1,
+        lambda_bar=0,
+        factor=2,
+    ):
+        """Estimate when the model will start to sparsify."""
+
+        def is_sparse(lambda_):
+            with torch.no_grad():
+                beta = self.skip.weight.data
+                theta = self.layers[0].weight.data
+
+                for _ in range(10000):
+                    new_beta, theta = prox(
+                        beta,
+                        theta,
+                        lambda_=lambda_,
+                        lambda_bar=lambda_bar,
+                        M=M,
+                    )
+                    if torch.abs(beta - new_beta).max() < 1e-5:
+                        # print(_)
+                        break
+                    beta = new_beta
+                return (torch.norm(beta, p=2, dim=0) == 0).sum()
+
+        start = 1e-6
+        while not is_sparse(factor * start):
+            start *= factor
+        return start
 
     def l2_regularization(self):
         """

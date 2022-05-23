@@ -27,7 +27,6 @@ X_train, X_test, y_train, y_test = train_test_split(X, y)
 
 model = LassoNetRegressor(
     hidden_dims=(10,),
-    eps_start=0.1,
     verbose=True,
 )
 path = model.path(X_train, y_train)

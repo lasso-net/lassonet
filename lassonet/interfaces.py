@@ -3,6 +3,7 @@ from abc import ABCMeta, abstractmethod, abstractstaticmethod
 from dataclasses import dataclass
 from functools import partial
 from typing import List
+import warnings
 import numpy as np
 from sklearn.base import (
     BaseEstimator,
@@ -52,7 +53,6 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         self,
         *,
         hidden_dims=(100,),
-        eps_start=None,
         lambda_start=None,
         lambda_seq=None,
         gamma=0.0,
@@ -79,11 +79,8 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         ----------
         hidden_dims : tuple of int, default=(100,)
             Shape of the hidden layers.
-        eps_start : float, default=1
-            Sets lambda_start such that it has a strength comparable to the
-            loss of the unconstrained model multiplied by eps_start.
-        lambda_start : float, default=None
-            First value on the path.
+        lambda_start : float, default='auto'
+            First value on the path. Leave 'auto' to estimate it automatically.
         lambda_seq : iterable of float
             If specified, the model will be trained on this sequence
             of values, until all coefficients are zero.
@@ -136,12 +133,6 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         """
         assert isinstance(hidden_dims, tuple), "`hidden_dims` must be a tuple"
         self.hidden_dims = hidden_dims
-        assert (eps_start is not None) + (
-            lambda_start is not None
-        ) < 2, "You cannot provide both `eps_start` and `lambda_start`"
-        if eps_start is None:
-            eps_start = 1
-        self.eps_start = eps_start
         self.lambda_start = lambda_start
         self.lambda_seq = lambda_seq
         self.gamma = gamma
@@ -367,8 +358,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
     ) -> List[HistoryItem]:
         """Train LassoNet on a lambda_ path.
         The path is defined by the class parameters:
-        start at `lambda_start` or `eps * val_loss` and
-        increment according to `path_multiplier` or `n_lambdas`.
+        start at `lambda_start` and increment according to `path_multiplier`.
         The path will stop when no feature is being used anymore.
 
         callback will be called at each step on (model, history)
@@ -411,6 +401,8 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             print(f"Initialized dense model")
             hist[-1].log()
 
+        optimizer = self.optim_path(self.model.parameters())
+
         # build lambda_seq
         lambda_seq = self.lambda_seq
         if lambda_seq is None:
@@ -420,14 +412,18 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                     yield start
                     start *= self.path_multiplier
 
-            if self.lambda_start is not None:
-                lambda_seq = _lambda_seq(self.lambda_start)
+            if self.lambda_start == "auto":
+                # divide by 10 for initial training
+                self.lambda_start_ = (
+                    self.model.lambda_start(M=self.M)
+                    / optimizer.param_groups[0]["lr"]
+                    / 10
+                )
+                lambda_seq = _lambda_seq(self.lambda_start_)
             else:
-                # don't take hist[-1].regularization into account!
-                lambda_seq = _lambda_seq(self.eps_start * hist[-1].val_loss)
+                lambda_seq = _lambda_seq(self.lambda_start)
 
-        optimizer = self.optim_path(self.model.parameters())
-
+        is_dense = True
         for current_lambda in lambda_seq:
             if self.model.selected_count() == 0:
                 break
@@ -443,6 +439,18 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                 patience=self.patience_path,
                 return_state_dict=return_state_dicts,
             )
+            if is_dense and self.model.selected_count() < X.shape[1]:
+                is_dense = False
+                if (
+                    self.lambda_start is None
+                    and current_lambda < 2 * self.lambda_start_
+                ):
+                    warnings.warn(
+                        f"The estimated lambda_start={self.lambda_start_:.3f} "
+                        "might be too large.\n"
+                        f"Features start to disappear at {current_lambda=:.3f}."
+                    )
+
             hist.append(last)
             if callback is not None:
                 callback(self, hist)
