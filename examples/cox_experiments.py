@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from multiprocessing.sharedctypes import Value
 from pathlib import Path
 import numpy as np
 from sklearn import preprocessing
@@ -13,6 +14,9 @@ from tqdm import tqdm
 from lassonet.interfaces import LassoNetCoxRegressorCV
 
 
+DATA_PATH = Path(__file__).parent / "data"
+
+
 def transform_one_hot(input_matrix, col_name):
     one_hot_col = pd.get_dummies(input_matrix[col_name], prefix=col_name)
     input_matrix = input_matrix.drop([col_name], axis=1)
@@ -20,101 +24,85 @@ def transform_one_hot(input_matrix, col_name):
     return input_matrix
 
 
-# dataset = "fl_chain"
+def load_data(dataset):
+    if not os.path.exists(DATA_PATH):
+        os.makedirs(DATA_PATH)
 
-# dataset = "breast_cancer"
-dataset = "whas500"
-# dataset = "veterans_lung_cancer"
-# dataset = "HNSCC"
+    if dataset == "breast_cancer":
+        X, y = datasets.load_breast_cancer()
+        di_er = {"negative": 0, "positive": 1}
+        di_grade = {
+            "poorly differentiated": -1,
+            "intermediate": 0,
+            "well differentiated": 1,
+            "unkown": 0,
+        }
+        X = X.replace({"er": di_er, "grade": di_grade})
+        X.to_csv(DATA_PATH / f"{dataset}_x.csv", index=False)
+        y_temp = pd.DataFrame(y, columns=["t.tdm", "e.tdm"])
+        di_event = {True: 1, False: 0}
+        y_temp = y_temp.replace({"e.tdm": di_event})
+        y_temp.to_csv(DATA_PATH / f"{dataset}_y.csv", index=False)
 
+    elif dataset == "fl_chain":
+        X, y = datasets.load_flchain()
+        di_mgus = {"no": 0, "yes": 1}
+        X = X.replace({"mgus": di_mgus, "creatinine": {np.nan: 0}})
+        col_names = ["chapter", "sex", "sample.yr", "flc.grp"]
+        for col_name in col_names:
+            X = transform_one_hot(X, col_name)
+        X.to_csv(DATA_PATH / f"{dataset}_x.csv", index=False)
+        y_temp = pd.DataFrame(y, columns=["futime", "death"])
+        di_event = {True: 0, False: 1}
+        y_temp = y_temp.replace({"death": di_event})
+        y_temp.to_csv(DATA_PATH / f"{dataset}_y.csv", index=False)
 
-data = Path(__file__).parent / "HNSCC_data"
-if not os.path.exists(data):
-    os.makedirs(data)
-x_filename = "{dataset}_x.csv".format(dataset=dataset)
-y_filename = "{dataset}_y.csv".format(dataset=dataset)
+    elif dataset == "whas500":
+        X, y = datasets.load_whas500()
+        X.to_csv(DATA_PATH / f"{dataset}_x.csv", index=False)
+        y_temp = pd.DataFrame(y, columns=["lenfol", "fstat"])
+        di_event = {True: 1, False: 0}
+        y_temp = y_temp.replace({"fstat": di_event})
+        y_temp.to_csv(DATA_PATH / f"{dataset}_y.csv", index=False)
 
-if dataset == "breast_cancer":
-    # breast cancer
-    X, y = datasets.load_breast_cancer()
-    di_er = {"negative": 0, "positive": 1}
-    di_grade = {
-        "poorly differentiated": -1,
-        "intermediate": 0,
-        "well differentiated": 1,
-        "unkown": 0,
-    }
-    X = X.replace({"er": di_er, "grade": di_grade})
-    X.to_csv(data / x_filename, index=False)
-    y_temp = pd.DataFrame(y, columns=["t.tdm", "e.tdm"])
-    di_event = {True: 1, False: 0}
-    y_temp = y_temp.replace({"e.tdm": di_event})
-    y_temp.to_csv(data / y_filename, index=False)
+    elif dataset == "veterans_lung_cancer":
+        X, y = datasets.load_veterans_lung_cancer()
+        col_names = ["Celltype", "Prior_therapy", "Treatment"]
+        for col_name in col_names:
+            X = transform_one_hot(X, col_name)
+        X.to_csv(DATA_PATH / f"{dataset}_x.csv", index=False)
+        y_temp = pd.DataFrame(y, columns=["Survival_in_days", "Status"])
+        di_event = {False: 0, True: 1}
+        y_temp = y_temp.replace({"Status": di_event})
+        y_temp.to_csv(DATA_PATH / f"{dataset}_y.csv", index=False)
 
-elif dataset == "fl_chain":
-    X, y = datasets.load_flchain()
-    di_sex = {"F": 0, "M": 1}
-    di_mgus = {"no": 0, "yes": 1}
-    # X = X.replace({'sex': di_sex, 'mgus': di_mgus, 'creatinine': {np.nan: 0}})
-    X = X.replace({"mgus": di_mgus, "creatinine": {np.nan: 0}})
-    # pdb.set_trace()
-    # create one-hot matrix
-    col_names = ["chapter", "sex", "sample.yr", "flc.grp"]
-    for col_name in col_names:
-        X = transform_one_hot(X, col_name)
-    X.to_csv(data / x_filename, index=False)
-    y_temp = pd.DataFrame(y, columns=["futime", "death"])
-    di_event = {True: 0, False: 1}
-    y_temp = y_temp.replace({"death": di_event})
-    y_temp.to_csv(data / y_filename, index=False)
+    elif dataset == "hnscc":
+        pass
+    else:
+        raise ValueError("Dataset unknown")
 
-elif dataset == "whas500":
-    X, y = datasets.load_whas500()
-    X.to_csv(data / x_filename, index=False)
-    y_temp = pd.DataFrame(y, columns=["lenfol", "fstat"])
-    di_event = {True: 1, False: 0}
-    y_temp = y_temp.replace({"fstat": di_event})
-    y_temp.to_csv(data / y_filename, index=False)
-
-elif dataset == "veterans_lung_cancer":
-    # not finished
-    # pdb.set_trace()
-    X, y = datasets.load_veterans_lung_cancer()
-    col_names = ["Celltype", "Prior_therapy", "Treatment"]
-    for col_name in col_names:
-        X = transform_one_hot(X, col_name)
-    X.to_csv(data / x_filename, index=False)
-    y_temp = pd.DataFrame(y, columns=["Survival_in_days", "Status"])
-    di_event = {False: 0, True: 1}
-    y_temp = y_temp.replace({"Status": di_event})
-    y_temp.to_csv(data / y_filename, index=False)
-
-elif dataset == "HNSCC":
-    x_filename = "x_glmnet_2.csv"
-    y_filename = "y_glmnet_2.csv"
-
-X = np.genfromtxt(data / x_filename, delimiter=",", skip_header=1)
-y = np.genfromtxt(data / y_filename, delimiter=",", skip_header=1)
-X = preprocessing.StandardScaler().fit(X).transform(X)
-print(dataset, "data loaded")
+    X = np.genfromtxt(DATA_PATH / f"{dataset}_x.csv", delimiter=",", skip_header=1)
+    y = np.genfromtxt(DATA_PATH / f"{dataset}_y.csv", delimiter=",", skip_header=1)
+    X = preprocessing.StandardScaler().fit(X).transform(X)
+    return X, y
 
 
-def run(random_state, dump=False):
+def run(X, y, *, random_state, dump=False):
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, random_state=random_state, stratify=y[:, 1], test_size=0.20
     )
     if dump:
         pd.DataFrame(X_train).to_csv(
-            data / f"train_{random_state}_{x_filename}", index=False
+            DATA_PATH / f"{dataset}_x_train_{random_state}.csv", index=False
         )
         pd.DataFrame(y_train).to_csv(
-            data / f"train_{random_state}_{y_filename}", index=False
+            DATA_PATH / f"{dataset}_y_train_{random_state}.csv", index=False
         )
         pd.DataFrame(X_test).to_csv(
-            data / f"test_{random_state}_{x_filename}", index=False
+            DATA_PATH / f"{dataset}_x_test_{random_state}.csv", index=False
         )
         pd.DataFrame(y_test).to_csv(
-            data / f"test_{random_state}_{y_filename}", index=False
+            DATA_PATH / f"{dataset}_y_test_{random_state}.csv", index=False
         )
 
     cv = list(
@@ -139,13 +127,26 @@ def run(random_state, dump=False):
     return test_score
 
 
-scores = np.array(
-    [
-        run(random_state)
-        for random_state in tqdm(range(10), desc="Running with different seeds")
-    ]
-)
-print(f"Final score: {scores.mean()} ± {scores.std()}")
+if __name__ == "__main__":
+    import sys
+
+    dataset = sys.argv[1]
+    assert dataset in {
+        "fl_chain",
+        "breast_cancer",
+        "whas500",
+        "veterans_lung_cancer",
+        "HNSCC",
+    }
+
+    X, y = load_data(dataset)
+    scores = np.array(
+        [
+            run(X, y, random_state=random_state)
+            for random_state in tqdm(range(10), desc="Running with different seeds")
+        ]
+    )
+    print(f"Final score: {scores.mean()} ± {scores.std()}")
 
 
 # import optuna
