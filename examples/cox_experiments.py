@@ -7,7 +7,7 @@ from tqdm import tqdm
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split, StratifiedKFold
 
-from sksurv import datasets
+import sksurv.datasets
 
 from lassonet import LassoNetCoxRegressorCV
 
@@ -28,7 +28,7 @@ def dump(array, name):
 
 def gen_data(dataset):
     if dataset == "breast":
-        X, y = datasets.load_breast_cancer()
+        X, y = sksurv.datasets.load_breast_cancer()
         di_er = {"negative": 0, "positive": 1}
         di_grade = {
             "poorly differentiated": -1,
@@ -43,7 +43,7 @@ def gen_data(dataset):
         y = y_temp
 
     elif dataset == "fl_chain":
-        X, y = datasets.load_flchain()
+        X, y = sksurv.datasets.load_flchain()
         di_mgus = {"no": 0, "yes": 1}
         X = X.replace({"mgus": di_mgus, "creatinine": {np.nan: 0}})
         col_names = ["chapter", "sex", "sample.yr", "flc.grp"]
@@ -55,14 +55,14 @@ def gen_data(dataset):
         y = y_temp
 
     elif dataset == "whas500":
-        X, y = datasets.load_whas500()
+        X, y = sksurv.datasets.load_whas500()
         y_temp = pd.DataFrame(y, columns=["lenfol", "fstat"])
         di_event = {True: 1, False: 0}
         y_temp = y_temp.replace({"fstat": di_event})
         y = y_temp
 
     elif dataset == "veterans":
-        X, y = datasets.load_veterans_lung_cancer()
+        X, y = sksurv.datasets.load_veterans_lung_cancer()
         col_names = ["Celltype", "Prior_therapy", "Treatment"]
         for col_name in col_names:
             X = transform_one_hot(X, col_name)
@@ -91,7 +91,7 @@ def load_data(dataset):
     return X, y
 
 
-def run(X, y, *, random_state, dump_splits=False):
+def run(X, y, *, random_state, dump_splits=False, verbose=False):
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, random_state=random_state, stratify=y[:, 1], test_size=0.20
     )
@@ -117,33 +117,47 @@ def run(X, y, *, random_state, dump_splits=False):
         path_multiplier=1.01,
         cv=cv,
         torch_seed=random_state,
+        verbose=verbose,
     )
     model.fit(X_train, y_train)
-
-    tqdm.write(f"train: {model.best_cv_score_:.04f} ± {model.best_cv_score_std_:.04f}")
-    tqdm.write(f"features: {model.best_selected_.sum().item()}")
     test_score = model.score(X_test, y_test)
-    tqdm.write(f"test: {test_score:.04f}")
+
+    if verbose:
+        tqdm.write(
+            f"train: {model.best_cv_score_:.04f} ± {model.best_cv_score_std_:.04f}"
+        )
+        tqdm.write(f"features: {model.best_selected_.sum().item()}")
+        tqdm.write(f"test: {test_score:.04f}")
     return test_score
 
 
 if __name__ == "__main__":
     """
     run with python3 script.py dataset
+
+    dataset=all runs all experiments
     """
 
     import sys
 
     dataset = sys.argv[1]
-
-    X, y = load_data(dataset)
-    scores = np.array(
-        [
-            run(X, y, random_state=random_state)
-            for random_state in tqdm(range(10), desc="Running with different seeds")
-        ]
-    )
-    print(f"Final score: {scores.mean()} ± {scores.std()}")
+    if dataset == "all":
+        datasets = ["breast", "whas500", "veterans", "hnscc"]
+        verbose = False
+    else:
+        datasets = [dataset]
+        verbose = 1
+    for dataset in datasets:
+        X, y = load_data(dataset)
+        scores = np.array(
+            [
+                run(X, y, random_state=random_state)
+                for random_state in tqdm(
+                    range(10), desc=f"Running {dataset} with different seeds"
+                )
+            ]
+        )
+        print(f"Final score for {dataset}: {scores.mean()} ± {scores.std()}")
 
 
 # import optuna
