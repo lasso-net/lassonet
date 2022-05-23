@@ -1,16 +1,15 @@
 #!/usr/bin/env python
 from pathlib import Path
 import numpy as np
+import pandas as pd
+from tqdm import tqdm
+
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split, StratifiedKFold
 
 from sksurv import datasets
-import os
 
-
-import pandas as pd
-from tqdm import tqdm
-from lassonet.interfaces import LassoNetCoxRegressorCV
+from lassonet import LassoNetCoxRegressorCV
 
 
 DATA_PATH = Path(__file__).parent / "data"
@@ -23,11 +22,12 @@ def transform_one_hot(input_matrix, col_name):
     return input_matrix
 
 
-def load_data(dataset):
-    if not os.path.exists(DATA_PATH):
-        os.makedirs(DATA_PATH)
+def dump(array, name):
+    pd.DataFrame(array).to_csv(DATA_PATH / name, index=False)
 
-    if dataset == "breast_cancer":
+
+def gen_data(dataset):
+    if dataset == "breast":
         X, y = datasets.load_breast_cancer()
         di_er = {"negative": 0, "positive": 1}
         di_grade = {
@@ -37,11 +37,10 @@ def load_data(dataset):
             "unkown": 0,
         }
         X = X.replace({"er": di_er, "grade": di_grade})
-        X.to_csv(DATA_PATH / f"{dataset}_x.csv", index=False)
         y_temp = pd.DataFrame(y, columns=["t.tdm", "e.tdm"])
         di_event = {True: 1, False: 0}
         y_temp = y_temp.replace({"e.tdm": di_event})
-        y_temp.to_csv(DATA_PATH / f"{dataset}_y.csv", index=False)
+        y = y_temp
 
     elif dataset == "fl_chain":
         X, y = datasets.load_flchain()
@@ -50,59 +49,61 @@ def load_data(dataset):
         col_names = ["chapter", "sex", "sample.yr", "flc.grp"]
         for col_name in col_names:
             X = transform_one_hot(X, col_name)
-        X.to_csv(DATA_PATH / f"{dataset}_x.csv", index=False)
         y_temp = pd.DataFrame(y, columns=["futime", "death"])
         di_event = {True: 0, False: 1}
         y_temp = y_temp.replace({"death": di_event})
-        y_temp.to_csv(DATA_PATH / f"{dataset}_y.csv", index=False)
+        y = y_temp
 
     elif dataset == "whas500":
         X, y = datasets.load_whas500()
-        X.to_csv(DATA_PATH / f"{dataset}_x.csv", index=False)
         y_temp = pd.DataFrame(y, columns=["lenfol", "fstat"])
         di_event = {True: 1, False: 0}
         y_temp = y_temp.replace({"fstat": di_event})
-        y_temp.to_csv(DATA_PATH / f"{dataset}_y.csv", index=False)
+        y = y_temp
 
-    elif dataset == "veterans_lung_cancer":
+    elif dataset == "veterans":
         X, y = datasets.load_veterans_lung_cancer()
         col_names = ["Celltype", "Prior_therapy", "Treatment"]
         for col_name in col_names:
             X = transform_one_hot(X, col_name)
-        X.to_csv(DATA_PATH / f"{dataset}_x.csv", index=False)
         y_temp = pd.DataFrame(y, columns=["Survival_in_days", "Status"])
         di_event = {False: 0, True: 1}
         y_temp = y_temp.replace({"Status": di_event})
-        y_temp.to_csv(DATA_PATH / f"{dataset}_y.csv", index=False)
-
+        y = y_temp
     elif dataset == "hnscc":
-        pass
+        raise ValueError("Dataset exists")
     else:
         raise ValueError("Dataset unknown")
 
-    X = np.genfromtxt(DATA_PATH / f"{dataset}_x.csv", delimiter=",", skip_header=1)
-    y = np.genfromtxt(DATA_PATH / f"{dataset}_y.csv", delimiter=",", skip_header=1)
+    dump(X, f"{dataset}_x.csv")
+    dump(y, f"{dataset}_y.csv")
+
+
+def load_data(dataset):
+    DATA_PATH.mkdir(exist_ok=True)
+    path_x = DATA_PATH / f"{dataset}_x.csv"
+    path_y = DATA_PATH / f"{dataset}_y.csv"
+    if not (path_x.exists() and path_y.exists()):
+        gen_data(dataset)
+    X = np.genfromtxt(path_x, delimiter=",", skip_header=1)
+    y = np.genfromtxt(path_y, delimiter=",", skip_header=1)
     X = preprocessing.StandardScaler().fit(X).transform(X)
     return X, y
 
 
-def run(X, y, *, random_state, dump=False):
+def run(X, y, *, random_state, dump_splits=False):
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, random_state=random_state, stratify=y[:, 1], test_size=0.20
     )
-    if dump:
-        pd.DataFrame(X_train).to_csv(
-            DATA_PATH / f"{dataset}_x_train_{random_state}.csv", index=False
-        )
-        pd.DataFrame(y_train).to_csv(
-            DATA_PATH / f"{dataset}_y_train_{random_state}.csv", index=False
-        )
-        pd.DataFrame(X_test).to_csv(
-            DATA_PATH / f"{dataset}_x_test_{random_state}.csv", index=False
-        )
-        pd.DataFrame(y_test).to_csv(
-            DATA_PATH / f"{dataset}_y_test_{random_state}.csv", index=False
-        )
+
+    if dump_splits:
+        for array, name in [
+            (X_train, "x_train"),
+            (y_train, "y_train"),
+            (X_test, "x_test"),
+            (y_test, "y_test"),
+        ]:
+            dump(array, f"{dataset}_{name}_{random_state}.csv")
 
     cv = list(
         StratifiedKFold(n_splits=5, shuffle=True, random_state=random_state).split(
@@ -134,13 +135,6 @@ if __name__ == "__main__":
     import sys
 
     dataset = sys.argv[1]
-    assert dataset in {
-        "fl_chain",
-        "breast_cancer",
-        "whas500",
-        "veterans_lung_cancer",
-        "HNSCC",
-    }
 
     X, y = load_data(dataset)
     scores = np.array(
