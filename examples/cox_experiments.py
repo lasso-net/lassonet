@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from multiprocessing.sharedctypes import Value
 from pathlib import Path
 import numpy as np
 from sklearn import preprocessing
