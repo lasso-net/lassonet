@@ -1,8 +1,16 @@
 #!/usr/bin/env python
+"""
+Install required packages with:
+
+    pip install scipy joblib tqdm_joblib
+"""
+
+
 from pathlib import Path
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
+import scipy.stats
 
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split, StratifiedKFold
@@ -15,6 +23,13 @@ from joblib import Parallel, delayed
 from tqdm_joblib import tqdm_joblib
 
 DATA_PATH = Path(__file__).parent / "data"
+
+
+def confidence_interval(data, confidence=0.95):
+    "https://stackoverflow.com/a/15034143/5133167"
+    return scipy.stats.sem(data) * scipy.stats.t.ppf(
+        (1 + confidence) / 2.0, len(data) - 1
+    )
 
 
 def transform_one_hot(input_matrix, col_name):
@@ -128,7 +143,8 @@ def run(
 
     if verbose:
         tqdm.write(
-            f"train: {model.best_cv_score_:.04f} ± {model.best_cv_score_std_:.04f}"
+            f"train: {model.best_cv_score_:.04f} "
+            f"± {confidence_interval(model.best_cv_scores_):.04f}"
         )
         tqdm.write(f"features: {model.best_selected_.sum().item()}")
         tqdm.write(f"test: {test_score:.04f}")
@@ -141,15 +157,13 @@ if __name__ == "__main__":
 
     dataset=all runs all experiments
 
-    method can be "breslow" or "efron" (default "breslow")
-
-    requires joblib and tqdm_joblib
+    method can be "breslow" or "efron" (default "efron")
     """
 
     import sys
 
     dataset = sys.argv[1]
-    tie_approximation = sys.argv[2] if len(sys.argv) > 2 else "breslow"
+    tie_approximation = sys.argv[2] if len(sys.argv) > 2 else "efron"
     if dataset == "all":
         datasets = ["breast", "whas500", "veterans", "hnscc"]
         verbose = False
@@ -176,7 +190,8 @@ if __name__ == "__main__":
             )
 
         tqdm.write(
-            f"Final score for {dataset}: {scores.mean():.04f} ± {scores.std():.04f}"
+            f"Final score for {dataset}: {scores.mean():.04f} "
+            "± {confidence_interval(scores):.04f}"
         )
 
 
