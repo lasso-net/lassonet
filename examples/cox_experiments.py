@@ -128,6 +128,10 @@ def run(X, y, *, random_state, dump=False):
 
 
 if __name__ == "__main__":
+    """
+    run with python3 script.py dataset
+    """
+
     import sys
 
     dataset = sys.argv[1]
