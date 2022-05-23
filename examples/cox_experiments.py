@@ -99,14 +99,23 @@ X = preprocessing.StandardScaler().fit(X).transform(X)
 print(dataset, "data loaded")
 
 
-def run(random_state):
+def run(random_state, dump=False):
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, random_state=random_state, stratify=y[:, 1], test_size=0.20
     )
-    pd.DataFrame(X_train).to_csv(data / ("train_" + x_filename), index=False)
-    pd.DataFrame(y_train).to_csv(data / ("train_" + y_filename), index=False)
-    pd.DataFrame(X_test).to_csv(data / ("test_" + x_filename), index=False)
-    pd.DataFrame(y_test).to_csv(data / ("test_" + y_filename), index=False)
+    if dump:
+        pd.DataFrame(X_train).to_csv(
+            data / f"train_{random_state}_{x_filename}", index=False
+        )
+        pd.DataFrame(y_train).to_csv(
+            data / f"train_{random_state}_{y_filename}", index=False
+        )
+        pd.DataFrame(X_test).to_csv(
+            data / f"test_{random_state}_{x_filename}", index=False
+        )
+        pd.DataFrame(y_test).to_csv(
+            data / f"test_{random_state}_{y_filename}", index=False
+        )
 
     cv = list(
         StratifiedKFold(n_splits=5, shuffle=True, random_state=random_state).split(
@@ -122,10 +131,11 @@ def run(random_state):
         torch_seed=random_state,
     )
     model.fit(X_train, y_train)
-    print(f"train: {model.best_cv_score_:.04f} ± {model.best_cv_score_std_:.04f}")
-    print(f"features: {model.best_selected_.sum().item()}")
+
+    tqdm.write(f"train: {model.best_cv_score_:.04f} ± {model.best_cv_score_std_:.04f}")
+    tqdm.write(f"features: {model.best_selected_.sum().item()}")
     test_score = model.score(X_test, y_test)
-    print(f"test: {test_score:.04f}")
+    tqdm.write(f"test: {test_score:.04f}")
     return test_score
 
 
