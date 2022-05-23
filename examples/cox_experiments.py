@@ -175,7 +175,9 @@ if __name__ == "__main__":
                 )
             )
 
-        tqdm.write(f"Final score for {dataset}: {scores.mean()} ± {scores.std()}")
+        tqdm.write(
+            f"Final score for {dataset}: {scores.mean():.04f} ± {scores.std():.04f}"
+        )
 
 
 # import optuna
