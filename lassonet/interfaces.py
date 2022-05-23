@@ -53,7 +53,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         self,
         *,
         hidden_dims=(100,),
-        lambda_start=None,
+        lambda_start="auto",
         lambda_seq=None,
         gamma=0.0,
         gamma_skip=0.0,
