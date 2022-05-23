@@ -132,7 +132,7 @@ def run(
 
     model = LassoNetCoxRegressorCV(
         tie_approximation=tie_approximation,
-        hidden_dims=(32,),
+        hidden_dims=(16, 16),
         path_multiplier=1.01,
         cv=cv,
         torch_seed=random_state,
@@ -191,7 +191,7 @@ if __name__ == "__main__":
 
         tqdm.write(
             f"Final score for {dataset}: {scores.mean():.04f} "
-            "± {confidence_interval(scores):.04f}"
+            f"± {confidence_interval(scores):.04f}"
         )
 
 
