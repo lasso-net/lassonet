@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from functools import partial
 from typing import List
 import warnings
+
 import numpy as np
 from sklearn.base import (
     BaseEstimator,
@@ -14,6 +15,7 @@ from sklearn.base import (
 from sklearn.model_selection import check_cv, train_test_split
 import torch
 from tqdm import tqdm
+
 from .model import LassoNet
 from .cox import CoxPHLoss, concordance_index
 
@@ -352,6 +354,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         *,
         X_val=None,
         y_val=None,
+        lambda_seq=None,
         lambda_max=float("inf"),
         return_state_dicts=True,
         callback=None,
@@ -398,14 +401,17 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         if callback is not None:
             callback(self, hist)
         if self.verbose > 1:
-            print(f"Initialized dense model")
+            print("Initialized dense model")
             hist[-1].log()
 
         optimizer = self.optim_path(self.model.parameters())
 
         # build lambda_seq
-        lambda_seq = self.lambda_seq
-        if lambda_seq is None:
+        if lambda_seq is not None:
+            pass
+        elif self.lambda_seq is not None:
+            lambda_seq = self.lambda_seq
+        else:
 
             def _lambda_seq(start):
                 while start <= lambda_max:
@@ -441,15 +447,20 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             )
             if is_dense and self.model.selected_count() < X.shape[1]:
                 is_dense = False
-                if (
-                    self.lambda_start is None
-                    and current_lambda < 2 * self.lambda_start_
-                ):
-                    warnings.warn(
-                        f"The estimated lambda_start={self.lambda_start_:.3f} "
-                        "might be too large.\n"
-                        f"Features start to disappear at {current_lambda=:.3f}."
-                    )
+                if self.lambda_start == "auto":
+                    if current_lambda / self.lambda_start_ < 2:
+                        warnings.warn(
+                            f"The estimated lambda_start={self.lambda_start_:.3f} "
+                            "might be too large.\n"
+                            f"Features start to disappear at {current_lambda=:.3f}."
+                        )
+                else:
+                    if current_lambda / self.lambda_start < 2:
+                        warnings.warn(
+                            f"The chosen lambda_start={self.lambda_start:.3f} "
+                            "might be too large.\n"
+                            f"Features start to disappear at {current_lambda=:.3f}."
+                        )
 
             hist.append(last)
             if callback is not None:
@@ -597,50 +608,99 @@ class BaseLassoNetCV(BaseLassoNet, metaclass=ABCMeta):
         super().__init__(**kwargs)
         self.cv = check_cv(cv)
 
-    # TODO: add plotting method
+    def path(
+        self,
+        X,
+        y,
+        *,
+        return_state_dicts=True,
+    ):
+        raw_lambdas_ = []
+        self.raw_scores_ = []
+        self.raw_paths_ = []
 
-    def fit(self, X, y):
-        # compute scores for each split
-        lambdas = []
-        scores = []
+        # TODO: parallelize
         for train_index, test_index in tqdm(
             self.cv.split(X, y),
             total=self.cv.get_n_splits(X, y),
             desc="Choosing lambda with cross-validation",
             disable=self.verbose == 0,
         ):
+            split_lambdas = []
             split_scores = []
-            scores.append(split_scores)
+            raw_lambdas_.append(split_lambdas)
+            self.raw_scores_.append(split_scores)
 
             def callback(model, hist):
-                if len(hist) == len(lambdas) + 1:
-                    lambdas.append(hist[-1].lambda_)
+                split_lambdas.append(hist[-1].lambda_)
                 split_scores.append(model.score(X[test_index], y[test_index]))
 
-            self.path(
+            path = super().path(
                 X[train_index],
                 y[train_index],
                 return_state_dicts=False,  # avoid memory cost
                 callback=callback,
             )
+            self.raw_paths_.append(path)
 
-        # pad
-        max_length = max(map(len, scores))
-        for split_scores in scores:
-            split_scores += [split_scores[-1]] * (max_length - len(split_scores))
+        # build final path
+        lambda_ = min(sl[1] for sl in raw_lambdas_)
+        lambda_max = max(sl[-1] for sl in raw_lambdas_)
+        self.lambdas_ = []
+        while lambda_ < lambda_max:
+            self.lambdas_.append(lambda_)
+            lambda_ *= self.path_multiplier
 
-        self.lambdas_ = lambdas
-        self.scores_ = scores = np.array(scores).T
+        # interpolate new scores
+        self.interp_scores_ = np.stack(
+            [
+                np.interp(np.log(self.lambdas_), np.log(sl[1:]), ss[1:])
+                for sl, ss in zip(raw_lambdas_, self.raw_scores_)
+            ],
+            axis=-1,
+        )
 
-        best_lambda_idx = scores.mean(axis=1).argmax()
-        self.best_lambda_ = lambdas[best_lambda_idx]
-        self.best_cv_scores_ = scores[best_lambda_idx]
+        # select best lambda based on cross_validation
+        best_lambda_idx = self.interp_scores_.mean(axis=1).argmax()
+        self.best_lambda_ = self.lambdas_[best_lambda_idx]
+        self.best_cv_scores_ = self.interp_scores_[best_lambda_idx]
         self.best_cv_score_ = self.best_cv_scores_.mean()
 
-        self.path_ = self.path(
-            X, y, lambda_max=self.best_lambda_, return_state_dicts=False
+        if self.lambda_start == "auto":
+            # forget the previously estimated lambda_start
+            self.lambda_start_ = self.lambdas_[0]
+
+        # train with the chosen lambda sequence
+        path = super().path(
+            X,
+            y,
+            lambda_seq=self.lambdas_[: best_lambda_idx + 1],
+            return_state_dicts=return_state_dicts,
         )
-        self.best_selected_ = self.path_[-1].selected
+        if isinstance(self, LassoNetCoxRegressor) and not path[-1].selected.any():
+            # condition to retrain and avoid having 0 feature which gives score 0
+            # TODO: handle backtrack in path even when return_state_dicts=False
+            path = super().path(
+                X,
+                y,
+                lambda_seq=[h.lambda_ for h in path[1:-1]],
+                return_state_dicts=return_state_dicts,
+            )
+        self.path_ = path
+
+        self.best_selected_ = path[-1].selected
+        return path
+
+    def fit(
+        self,
+        X,
+        y,
+    ):
+        """Train the model.
+        Note that if `lambda_` is not given, the trained model
+        will most likely not use any feature.
+        """
+        self.path(X, y, return_state_dicts=False)
         return self
 
 

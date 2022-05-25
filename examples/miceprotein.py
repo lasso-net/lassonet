@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 
 from lassonet import LassoNetClassifier, plot_path
 from lassonet.interfaces import LassoNetClassifierCV
+from lassonet import plot_cv
 
 X, y = fetch_openml(name="miceprotein", return_X_y=True)
 # Fill missing values with the mean
@@ -30,9 +31,12 @@ X_train, X_test, y_train, y_test = train_test_split(X, y)
 
 
 model = LassoNetClassifierCV()
-path = model.fit(X_train, y_train)
+model.path(X_train, y_train)
 print("Best model scored", model.score(X_test, y_test))
 print("Lambda =", model.best_lambda_)
+plot_cv(model, X_test, y_test)
+plt.savefig("miceprotein-cv.png")
+1 / 0
 
 model = LassoNetClassifier()
 path = model.path(X_train, y_train)

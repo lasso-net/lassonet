@@ -10,4 +10,4 @@ from .interfaces import (
     LassoNetCoxRegressorCV,
     lassonet_path,
 )
-from .utils import plot_path
+from .plot import plot_path, plot_cv

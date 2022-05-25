@@ -7,10 +7,11 @@ Install required packages with:
 
 
 from pathlib import Path
+from time import time
+from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
-import scipy.stats
 
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split, StratifiedKFold
@@ -22,14 +23,14 @@ from lassonet import LassoNetCoxRegressorCV
 from joblib import Parallel, delayed
 from tqdm_joblib import tqdm_joblib
 
+from lassonet import plot_cv
+from lassonet.utils import confidence_interval
+
 DATA_PATH = Path(__file__).parent / "data"
+DATA_PATH.mkdir(exist_ok=True)
 
-
-def confidence_interval(data, confidence=0.95):
-    "https://stackoverflow.com/a/15034143/5133167"
-    return scipy.stats.sem(data) * scipy.stats.t.ppf(
-        (1 + confidence) / 2.0, len(data) - 1
-    )
+FIGURES_PATH = Path() / "cox_figures"
+FIGURES_PATH.mkdir(exist_ok=True)
 
 
 def transform_one_hot(input_matrix, col_name):
@@ -97,7 +98,6 @@ def gen_data(dataset):
 
 
 def load_data(dataset):
-    DATA_PATH.mkdir(exist_ok=True)
     path_x = DATA_PATH / f"{dataset}_x.csv"
     path_y = DATA_PATH / f"{dataset}_y.csv"
     if not (path_x.exists() and path_y.exists()):
@@ -109,8 +109,16 @@ def load_data(dataset):
 
 
 def run(
-    X, y, *, random_state, tie_approximation="breslow", dump_splits=False, verbose=False
+    dataset,
+    hidden_dims,
+    path_multiplier,
+    *,
+    random_state,
+    tie_approximation="breslow",
+    dump_splits=False,
+    verbose=False,
 ):
+    X, y = load_data(dataset)
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, random_state=random_state, stratify=y[:, 1], test_size=0.20
     )
@@ -132,23 +140,63 @@ def run(
 
     model = LassoNetCoxRegressorCV(
         tie_approximation=tie_approximation,
-        hidden_dims=(16, 16),
-        path_multiplier=1.01,
+        hidden_dims=hidden_dims,
+        path_multiplier=path_multiplier,
         cv=cv,
         torch_seed=random_state,
         verbose=verbose,
     )
-    model.fit(X_train, y_train)
+    model.path(X_train, y_train)
+    plot_cv(model, X_test, y_test)
+    Path("")
+    plt.savefig(
+        FIGURES_PATH
+        / (
+            f"cox-cv-{dataset}-{random_state}"
+            f"-{model.hidden_dims}-{model.path_multiplier}.jpg"
+        ),
+        dpi=300,
+    )
+
     test_score = model.score(X_test, y_test)
 
-    if verbose:
-        tqdm.write(
-            f"train: {model.best_cv_score_:.04f} "
-            f"± {confidence_interval(model.best_cv_scores_):.04f}"
-        )
-        tqdm.write(f"features: {model.best_selected_.sum().item()}")
-        tqdm.write(f"test: {test_score:.04f}")
     return test_score
+
+
+def experiment(dataset, hidden_dims, path_multiplier, n_runs, n_jobs):
+    start = time()
+    with tqdm_joblib(desc=f"Running on {dataset}", total=n_runs):
+        scores = np.array(
+            Parallel(n_jobs=n_jobs)(
+                delayed(run)(
+                    dataset,
+                    hidden_dims=hidden_dims,
+                    path_multiplier=path_multiplier,
+                    tie_approximation=tie_approximation,
+                    random_state=random_state,
+                )
+                for random_state in range(n_runs)
+            )
+        )
+    scores_str = np.array2string(
+        scores, separator=", ", formatter={"float_kind": "{:.2f}".format}
+    )
+    log = (
+        f"Dataset: {dataset}\n"
+        f"Arch: {hidden_dims}\n"
+        f"Path multiplier: {path_multiplier}\n"
+        f"Score: {scores.mean():.04f} "
+        f"± {confidence_interval(scores):.04f} "
+        f"with {n_runs} runs\n"
+        f"Raw scores: {scores_str}\n"
+        f"Running time: {time() - start:.00f}s with {n_jobs} processors\n"
+        f"Running time per run per cpu: {(time() - start) / n_runs / n_jobs:.00f}s\n"
+        f"{'-' * 50}\n"
+    )
+
+    tqdm.write(log)
+    with open("cox_experiments.log", "a") as f:
+        print(log, file=f)
 
 
 if __name__ == "__main__":
@@ -170,29 +218,20 @@ if __name__ == "__main__":
     else:
         datasets = [dataset]
         verbose = 1
-    for dataset in datasets:
-        X, y = load_data(dataset)
 
-        n_runs = 10
-        n_jobs = 5  # set to a divisor of `n_runs` for maximal efficiency
+    N_RUNS = 16
+    N_JOBS = 8  # set to a divisor of `n_runs` for maximal efficiency
 
-        with tqdm_joblib(desc=f"Running on {dataset}", total=n_runs):
-            scores = np.array(
-                Parallel(n_jobs=n_jobs)(
-                    delayed(run)(
-                        X,
-                        y,
-                        tie_approximation=tie_approximation,
-                        random_state=random_state,
-                    )
-                    for random_state in range(n_runs)
+    for hidden_dims in [(16, 16), (32,), (32, 16), (64,)]:
+        for path_multiplier in [1.01, 1.02]:
+            for dataset in datasets:
+                experiment(
+                    dataset=dataset,
+                    hidden_dims=hidden_dims,
+                    path_multiplier=path_multiplier,
+                    n_runs=N_RUNS,
+                    n_jobs=N_JOBS,
                 )
-            )
-
-        tqdm.write(
-            f"Final score for {dataset}: {scores.mean():.04f} "
-            f"± {confidence_interval(scores):.04f}"
-        )
 
 
 # import optuna
