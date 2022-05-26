@@ -190,7 +190,7 @@ def experiment(dataset, hidden_dims, path_multiplier, n_runs, n_jobs):
         f"with {n_runs} runs\n"
         f"Raw scores: {scores_str}\n"
         f"Running time: {time() - start:.00f}s with {n_jobs} processors\n"
-        f"Running time per run per cpu: {(time() - start) / n_runs / n_jobs:.00f}s\n"
+        f"Running time per run per cpu: {(time() - start) * n_jobs / n_runs:.00f}s\n"
         f"{'-' * 50}\n"
     )
 
