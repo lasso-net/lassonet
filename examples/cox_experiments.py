@@ -219,8 +219,8 @@ if __name__ == "__main__":
         datasets = [dataset]
         verbose = 1
 
-    N_RUNS = 16
-    N_JOBS = 8  # set to a divisor of `n_runs` for maximal efficiency
+    N_RUNS = 15
+    N_JOBS = 5  # set to a divisor of `n_runs` for maximal efficiency
 
     for hidden_dims in [(16, 16), (32,), (32, 16), (64,)]:
         for path_multiplier in [1.01, 1.02]:
