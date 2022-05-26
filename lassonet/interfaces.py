@@ -381,8 +381,8 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
 
         hist: List[HistoryItem] = []
 
-        if self.model is None:
-            self._init_model(X_train, y_train)
+        # always init model
+        self._init_model(X_train, y_train)
 
         hist.append(
             self._train(
