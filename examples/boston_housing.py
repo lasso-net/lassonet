@@ -36,7 +36,7 @@ lambda_ = []
 for save in path:
     model.load(save.state_dict)
     y_pred = model.predict(X_test)
-    n_selected.append(save.selected.sum())
+    n_selected.append(save.selected.sum().cpu().numpy())
     mse.append(mean_squared_error(y_test, y_pred))
     lambda_.append(save.lambda_)
 

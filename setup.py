@@ -8,7 +8,7 @@ def read(fname):
 
 setup(
     name="lassonet",
-    version="0.0.4",
+    version="0.0.9",
     author="Louis Abraham, Ismael Lemhadri",
     author_email="louis.abraham@yahoo.fr, lemhadri@stanford.edu",
     license="MIT",
@@ -23,7 +23,13 @@ setup(
         "Operating System :: OS Independent",
     ],
     packages=["lassonet"],
-    install_requires=["torch", "scikit-learn"],
+    install_requires=[
+        "torch",
+        "scikit-learn",
+        "matplotlib",
+        "sortedcontainers",
+        "tqdm",
+    ],
     tests_require=["pytest"],
     python_requires=">=3.6.5",
 )

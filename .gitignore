@@ -8,6 +8,6 @@ sphinx_docs/_*/
 docs/api/_sources
 dist/
 build/
-/*.png
-.idea
-.fuse_hidden*
+*.png
+*.jpg
+*.csv

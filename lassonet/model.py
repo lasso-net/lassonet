@@ -1,12 +1,14 @@
+from itertools import islice
+
 import torch
 from torch import nn
 from torch.nn import functional as F
 
-from .prox import inplace_prox
+from .prox import inplace_prox, prox
 
 
 class LassoNet(nn.Module):
-    def __init__(self, *dims):
+    def __init__(self, *dims, dropout=None):
         """
         first dimension is input
         last dimension is output
@@ -14,6 +16,7 @@ class LassoNet(nn.Module):
         assert len(dims) > 2
         super().__init__()
 
+        self.dropout = nn.Dropout(p=dropout) if dropout is not None else None
         self.layers = nn.ModuleList(
             [nn.Linear(dims[i], dims[i + 1]) for i in range(len(dims) - 1)]
         )
@@ -25,6 +28,8 @@ class LassoNet(nn.Module):
         for theta in self.layers:
             current_layer = theta(current_layer)
             if theta is not self.layers[-1]:
+                if self.dropout is not None:
+                    current_layer = self.dropout(current_layer)
                 current_layer = F.relu(current_layer)
         return result + current_layer
 
@@ -38,9 +43,59 @@ class LassoNet(nn.Module):
                 M=M,
             )
 
-    def regularization(self):
-        with torch.no_grad():
-            return torch.norm(self.skip.weight.data, p=2, dim=0).sum()
+    def lambda_start(
+        self,
+        M=1,
+        lambda_bar=0,
+        factor=2,
+    ):
+        """Estimate when the model will start to sparsify."""
+
+        def is_sparse(lambda_):
+            with torch.no_grad():
+                beta = self.skip.weight.data
+                theta = self.layers[0].weight.data
+
+                for _ in range(10000):
+                    new_beta, theta = prox(
+                        beta,
+                        theta,
+                        lambda_=lambda_,
+                        lambda_bar=lambda_bar,
+                        M=M,
+                    )
+                    if torch.abs(beta - new_beta).max() < 1e-5:
+                        # print(_)
+                        break
+                    beta = new_beta
+                return (torch.norm(beta, p=2, dim=0) == 0).sum()
+
+        start = 1e-6
+        while not is_sparse(factor * start):
+            start *= factor
+        return start
+
+    def l2_regularization(self):
+        """
+        L2 regulatization of the MLP without the first layer
+        which is bounded by the skip connection
+        """
+        ans = 0
+        for layer in islice(self.layers, 1, None):
+            ans += (
+                torch.norm(
+                    layer.weight.data,
+                    p=2,
+                )
+                ** 2
+            )
+        return ans
+
+    def l1_regularization_skip(self):
+        return torch.norm(self.skip.weight.data, p=2, dim=0).sum()
+
+    def l2_regularization_skip(self):
+        return torch.norm(self.skip.weight.data, p=2)
 
     def input_mask(self):
         with torch.no_grad():
