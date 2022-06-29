@@ -363,7 +363,6 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         The path is defined by the class parameters:
         start at `lambda_start` and increment according to `path_multiplier`.
         The path will stop when no feature is being used anymore.
-
         callback will be called at each step on (model, history)
         """
         assert (X_val is None) == (
@@ -374,8 +373,10 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             X_train, X_val, y_train, y_val = train_test_split(
                 X, y, test_size=self.val_size, random_state=self.random_state
             )
-        else:
+        elif X_val is None:
             X_train, y_train = X_val, y_val = X, y
+        else:
+            X_train, y_train = X, y
         X_train, y_train = self._cast_input(X_train, y_train)
         X_val, y_val = self._cast_input(X_val, y_val)
 
