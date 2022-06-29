@@ -373,8 +373,10 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             X_train, X_val, y_train, y_val = train_test_split(
                 X, y, test_size=self.val_size, random_state=self.random_state
             )
-        else:
+        elif X_val is None:
             X_train, y_train = X_val, y_val = X, y
+        else:
+            X_train, y_train = X, y
         X_train, y_train = self._cast_input(X_train, y_train)
         X_val, y_val = self._cast_input(X_val, y_val)
 
@@ -567,8 +569,8 @@ class LassoNetClassifier(
         with torch.no_grad():
             ans = torch.softmax(self.model(self._cast_input(X)), -1)
         if isinstance(X, np.ndarray):
-        ans = ans.cpu().numpy()
-    return ans
+            ans = ans.cpu().numpy()
+        return ans
 
 
 class LassoNetCoxRegressor(
