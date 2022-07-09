@@ -662,7 +662,7 @@ class BaseLassoNetCV(BaseLassoNet, metaclass=ABCMeta):
         )
 
         # select best lambda based on cross_validation
-        best_lambda_idx = self.interp_scores_.mean(axis=1).argmax()
+        best_lambda_idx = np.nanargmax(self.interp_scores_.mean(axis=1))
         self.best_lambda_ = self.lambdas_[best_lambda_idx]
         self.best_cv_scores_ = self.interp_scores_[best_lambda_idx]
         self.best_cv_score_ = self.best_cv_scores_.mean()
