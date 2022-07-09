@@ -20,7 +20,7 @@ def eval_on_path(model, path, X_test, y_test, *, score_function=None):
 
 
 if hasattr(torch.Tensor, "scatter_reduce_"):
-    # version > 1.12
+    # version >= 1.12
     def scatter_reduce(input, dim, index, reduce, *, output_size=None):
         src = input
         if output_size is None:
