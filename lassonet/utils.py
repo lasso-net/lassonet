@@ -19,16 +19,31 @@ def eval_on_path(model, path, X_test, y_test, *, score_function=None):
     return score
 
 
+if hasattr(torch.Tensor, "scatter_reduce_"):
+    # version > 1.12
+    def scatter_reduce(input, dim, index, reduce, *, output_size=None):
+        src = input
+        if output_size is None:
+            output_size = index.max() + 1
+        return torch.empty(output_size).scatter_reduce(
+            dim=dim, index=index, src=src, reduce=reduce, include_self=False
+        )
+
+
+else:
+    scatter_reduce = torch.scatter_reduce
+
+
 def scatter_logsumexp(input, index, *, dim=-1, output_size=None):
     """Inspired by torch_scatter.logsumexp
     Uses torch.scatter_reduce for performance
     """
-    max_value_per_index = torch.scatter_reduce(
+    max_value_per_index = scatter_reduce(
         input, dim=dim, index=index, output_size=output_size, reduce="amax"
     )
     max_per_src_element = max_value_per_index.gather(dim, index)
     recentered_scores = input - max_per_src_element
-    sum_per_index = torch.scatter_reduce(
+    sum_per_index = scatter_reduce(
         recentered_scores.exp(),
         dim=dim,
         index=index,
