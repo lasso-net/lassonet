@@ -148,7 +148,6 @@ def run(
     )
     model.path(X_train, y_train)
     plot_cv(model, X_test, y_test)
-    Path("")
     plt.savefig(
         FIGURES_PATH
         / (
