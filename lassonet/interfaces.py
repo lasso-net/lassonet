@@ -534,6 +534,7 @@ class LassoNetRegressor(
     criterion = torch.nn.MSELoss(reduction="mean")
 
     def predict(self, X):
+        self.model.eval()
         with torch.no_grad():
             ans = self.model(self._cast_input(X))
         if isinstance(X, np.ndarray):
@@ -559,6 +560,7 @@ class LassoNetClassifier(
         return (y.max() + 1).item()
 
     def predict(self, X):
+        self.model.eval()
         with torch.no_grad():
             ans = self.model(self._cast_input(X)).argmax(dim=1)
         if isinstance(X, np.ndarray):
@@ -566,6 +568,7 @@ class LassoNetClassifier(
         return ans
 
     def predict_proba(self, X):
+        self.model.eval()
         with torch.no_grad():
             ans = torch.softmax(self.model(self._cast_input(X)), -1)
         if isinstance(X, np.ndarray):
