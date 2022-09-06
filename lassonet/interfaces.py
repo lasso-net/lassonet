@@ -2,6 +2,7 @@ from itertools import islice
 from abc import ABCMeta, abstractmethod, abstractstaticmethod
 from dataclasses import dataclass
 from functools import partial
+import itertools
 from typing import List
 import warnings
 
@@ -430,8 +431,12 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             else:
                 lambda_seq = _lambda_seq(self.lambda_start)
 
+        # extract first value of lambda_seq
+        lambda_seq = iter(lambda_seq)
+        lambda_start = next(lambda_seq)
+
         is_dense = True
-        for current_lambda in lambda_seq:
+        for current_lambda in itertools.chain([lambda_start], lambda_seq):
             if self.model.selected_count() == 0:
                 break
             last = self._train(
@@ -448,20 +453,12 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             )
             if is_dense and self.model.selected_count() < X.shape[1]:
                 is_dense = False
-                if self.lambda_start == "auto":
-                    if current_lambda / self.lambda_start_ < 2:
-                        warnings.warn(
-                            f"The estimated lambda_start={self.lambda_start_:.3f} "
-                            "might be too large.\n"
-                            f"Features start to disappear at {current_lambda=:.3f}."
-                        )
-                else:
-                    if current_lambda / self.lambda_start < 2:
-                        warnings.warn(
-                            f"The chosen lambda_start={self.lambda_start:.3f} "
-                            "might be too large.\n"
-                            f"Features start to disappear at {current_lambda=:.3f}."
-                        )
+                if current_lambda / lambda_start < 2:
+                    warnings.warn(
+                        f"lambda_start={self.lambda_start:.3f} "
+                        "might be too large.\n"
+                        f"Features start to disappear at {current_lambda=:.3f}."
+                    )
 
             hist.append(last)
             if callback is not None:
