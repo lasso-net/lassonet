@@ -15,7 +15,7 @@ setup(
     description="Reference implementation of LassoNet",
     long_description=read("README.md"),
     long_description_content_type="text/markdown",
-    url="https://github.com/ilemhadri/lassonet",
+    url="https://github.com/lasso-net/lassonet",
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
@@ -24,12 +24,12 @@ setup(
     ],
     packages=["lassonet"],
     install_requires=[
-        "torch",
+        "torch >= 1.11",
         "scikit-learn",
         "matplotlib",
         "sortedcontainers",
         "tqdm",
     ],
     tests_require=["pytest"],
-    python_requires=">=3.6.5",
+    python_requires=">=3.8",
 )
