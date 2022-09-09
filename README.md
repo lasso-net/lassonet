@@ -14,15 +14,6 @@ LassoNet works by adding a linear skip connection from the input features to the
 pip install lassonet
 ```
 
-## Features
-
-- regression, classification and [Cox regression](https://en.wikipedia.org/wiki/Proportional_hazards_model) with `LassoNetRegressor`, `LassoNetClassifier` and `LassoNetCoxRegressor`.
-- cross-validation with `LassoNetRegressorCV`, `LassoNetClassifierCV` and `LassoNetCoxRegressorCV`
-- group feature selection with the `groups` argument
-- `lambda_start="auto"` heuristic
-
-Note that cross-validation, group feature selection and automatic `lambda_start` selection have not been published in papers, you can read the code or [post as issue](https://github.com/lasso-net/lassonet/issues/new) to request more details.
-
 ## Usage
 
 We have designed the code to follow scikit-learn's standards to the extent possible (e.g. [linear_model.Lasso](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Lasso.html)).
@@ -36,6 +27,17 @@ print("Lambda =", model.best_lambda_)
 ```
 
 You can read the full [documentation](https://lassonet.ml/lassonet/api/) or read the [examples](https://github.com/lasso-net/lassonet/tree/master/examples) that cover all features.
+
+## Features
+
+- regression, classification and [Cox regression](https://en.wikipedia.org/wiki/Proportional_hazards_model) with `LassoNetRegressor`, `LassoNetClassifier` and `LassoNetCoxRegressor`.
+- cross-validation with `LassoNetRegressorCV`, `LassoNetClassifierCV` and `LassoNetCoxRegressorCV`
+- group feature selection with the `groups` argument
+- `lambda_start="auto"` heuristic
+
+Note that cross-validation, group feature selection and automatic `lambda_start` selection have not been published in papers, you can read the code or [post as issue](https://github.com/lasso-net/lassonet/issues/new) to request more details.
+
+We are currently working (among others) on adding support for convolution layers, auto-encoders and online logging of experiments.
 
 ## Cross-validation
 
