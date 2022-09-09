@@ -11,3 +11,4 @@ build/
 *.png
 *.jpg
 *.csv
+.vscode
