@@ -24,7 +24,7 @@ setup(
     ],
     packages=["lassonet"],
     install_requires=[
-        "torch",
+        "torch >= 1.11",
         "scikit-learn",
         "matplotlib",
         "sortedcontainers",
