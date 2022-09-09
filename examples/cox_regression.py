@@ -7,9 +7,9 @@ import matplotlib.pyplot as plt
 
 from lassonet import LassoNetCoxRegressor, plot_path
 
-data = Path(__file__).parent / "HNSCC_data"
-X = np.genfromtxt(data / "x_glmnet_2.csv", delimiter=",", skip_header=1)
-y = np.genfromtxt(data / "y_glmnet_2.csv", delimiter=",", skip_header=1)
+data = Path(__file__).parent / "data"
+X = np.genfromtxt(data / "hnscc_x.csv", delimiter=",", skip_header=1)
+y = np.genfromtxt(data / "hnscc_y.csv", delimiter=",", skip_header=1)
 
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0)
