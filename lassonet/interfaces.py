@@ -370,7 +370,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         return_state_dicts=True,
         callback=None,
     ) -> List[HistoryItem]:
-        """Train LassoNet on a lambda_ path.
+        """Train LassoNet on a lambda\_ path.
         The path is defined by the class parameters:
         start at `lambda_start` and increment according to `path_multiplier`.
         The path will stop when no feature is being used anymore.

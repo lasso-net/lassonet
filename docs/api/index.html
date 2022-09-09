@@ -127,7 +127,7 @@ contained subobjects that are estimators.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="lassonet.LassoNetRegressor.path">
 <span class="sig-name descname"><span class="pre">path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lambda_seq</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lambda_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_state_dicts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">lassonet.interfaces.HistoryItem</span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#lassonet.LassoNetRegressor.path" title="Permalink to this definition">¶</a></dt>
-<dd><p>Train LassoNet on a <a href="#id1"><span class="problematic" id="id2">lambda_</span></a> path.
+<dd><p>Train LassoNet on a lambda_ path.
 The path is defined by the class parameters:
 start at <cite>lambda_start</cite> and increment according to <cite>path_multiplier</cite>.
 The path will stop when no feature is being used anymore.
@@ -272,7 +272,7 @@ contained subobjects that are estimators.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="lassonet.LassoNetClassifier.path">
 <span class="sig-name descname"><span class="pre">path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lambda_seq</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lambda_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_state_dicts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">lassonet.interfaces.HistoryItem</span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#lassonet.LassoNetClassifier.path" title="Permalink to this definition">¶</a></dt>
-<dd><p>Train LassoNet on a <a href="#id3"><span class="problematic" id="id4">lambda_</span></a> path.
+<dd><p>Train LassoNet on a lambda_ path.
 The path is defined by the class parameters:
 start at <cite>lambda_start</cite> and increment according to <cite>path_multiplier</cite>.
 The path will stop when no feature is being used anymore.
@@ -306,6 +306,394 @@ each label set be correctly predicted.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="lassonet.LassoNetClassifier.set_params">
 <span class="sig-name descname"><span class="pre">set_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lassonet.LassoNetClassifier.set_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the parameters of this estimator.</p>
+<p>The method works on simple estimators as well as on nested objects
+(such as <code class="xref py py-class docutils literal notranslate"><span class="pre">Pipeline</span></code>). The latter have
+parameters of the form <code class="docutils literal notranslate"><span class="pre">&lt;component&gt;__&lt;parameter&gt;</span></code> so that it’s
+possible to update each component of a nested object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>**params</strong> (<em>dict</em>) – Estimator parameters.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>self</strong> – Estimator instance.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>estimator instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lassonet.LassoNetCoxRegressor">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">lassonet.</span></span><span class="sig-name descname"><span class="pre">LassoNetCoxRegressor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_dims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(100)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lambda_start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lambda_seq</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma_skip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_multiplier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.02</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">M</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">groups</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_iters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(1000,</span> <span class="pre">100)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(100,</span> <span class="pre">10)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.99</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backtrack</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">torch_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tie_approximation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lassonet.LassoNetCoxRegressor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use LassoNet for Cox regression</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hidden_dims</strong> (<em>tuple of int</em><em>, </em><em>default=</em><em>(</em><em>100</em><em>,</em><em>)</em>) – Shape of the hidden layers.</p></li>
+<li><p><strong>lambda_start</strong> (<em>float</em><em>, </em><em>default='auto'</em>) – First value on the path. Leave ‘auto’ to estimate it automatically.</p></li>
+<li><p><strong>lambda_seq</strong> (<em>iterable of float</em>) – If specified, the model will be trained on this sequence
+of values, until all coefficients are zero.
+The dense model will always be trained first.
+Note: lambda_start and path_multiplier will be ignored.</p></li>
+<li><p><strong>gamma</strong> (<em>float</em><em>, </em><em>default=0.0</em>) – l2 penalization on the network</p></li>
+<li><p><strong>gamma</strong> – l2 penalization on the skip connection</p></li>
+<li><p><strong>path_multiplier</strong> (<em>float</em><em>, </em><em>default=1.02</em>) – Multiplicative factor (<span class="math notranslate nohighlight">\(1 + \epsilon\)</span>) to increase
+the penalty parameter over the path</p></li>
+<li><p><strong>M</strong> (<em>float</em><em>, </em><em>default=10.0</em>) – Hierarchy parameter.</p></li>
+<li><p><strong>groups</strong> (<em>None</em><em> or </em><em>list of lists</em>) – Use group LassoNet regularization.
+<cite>groups</cite> is a list of list such that <cite>groups[i]</cite>
+contains the indices of the features in the i-th group.</p></li>
+<li><p><strong>dropout</strong> (<em>float</em><em>, </em><em>default = None</em>) – </p></li>
+<li><p><strong>batch_size</strong> (<em>int</em><em>, </em><em>default=None</em>) – If None, does not use batches. Batches are shuffled at each epoch.</p></li>
+<li><p><strong>optim</strong> (<em>torch optimizer</em><em> or </em><em>tuple of 2 optimizers</em><em>, </em><em>default=None</em>) – Optimizer for initial training and path computation.
+Default is Adam(lr=1e-3), SGD(lr=1e-3, momentum=0.9).</p></li>
+<li><p><strong>n_iters</strong> (<em>int</em><em> or </em><em>pair of int</em><em>, </em><em>default=</em><em>(</em><em>1000</em><em>, </em><em>100</em><em>)</em>) – Maximum number of training epochs for initial training and path computation.
+This is an upper-bound on the effective number of epochs, since the model
+uses early stopping.</p></li>
+<li><p><strong>patience</strong> (<em>int</em><em> or </em><em>pair of int</em><em> or </em><em>None</em><em>, </em><em>default=10</em>) – Number of epochs to wait without improvement during early stopping.</p></li>
+<li><p><strong>tol</strong> (<em>float</em><em>, </em><em>default=0.99</em>) – Minimum improvement for early stopping: new objective &lt; tol * old objective.</p></li>
+<li><p><strong>backtrack</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If true, ensures the objective function decreases.</p></li>
+<li><p><strong>val_size</strong> (<em>float</em><em>, </em><em>default=None</em>) – Proportion of data to use for early stopping.
+0 means that training data is used.
+To disable early stopping, set patience=None.
+Default is 0.1 for all models except Cox for which training data is used.
+If X_val and y_val are given during training, it will be ignored.</p></li>
+<li><p><strong>device</strong> (<em>torch device</em><em>, </em><em>default=None</em>) – Device on which to train the model using PyTorch.
+Default: GPU if available else CPU</p></li>
+<li><p><strong>verbose</strong> (<em>int</em><em>, </em><em>default=1</em>) – </p></li>
+<li><p><strong>random_state</strong> – Random state for validation</p></li>
+<li><p><strong>torch_seed</strong> – Torch state for model random initialization</p></li>
+<li><p><strong>class_weight</strong> (<em>iterable of float</em><em>, </em><em>default=None</em>) – If specified, weights for different classes in training.
+There must be one number per class.</p></li>
+<li><p><strong>tie_approximation</strong> (<em>str</em>) – Tie approximation for the Cox model, must be one of (“breslow”, “efron”).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="lassonet.LassoNetCoxRegressor.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lassonet.LassoNetCoxRegressor.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Train the model.
+Note that if <cite>lambda_</cite> is not given, the trained model
+will most likely not use any feature.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lassonet.LassoNetCoxRegressor.get_params">
+<span class="sig-name descname"><span class="pre">get_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lassonet.LassoNetCoxRegressor.get_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get parameters for this estimator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>deep</strong> (<em>bool</em><em>, </em><em>default=True</em>) – If True, will return the parameters for this estimator and
+contained subobjects that are estimators.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>params</strong> – Parameter names mapped to their values.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lassonet.LassoNetCoxRegressor.path">
+<span class="sig-name descname"><span class="pre">path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lambda_seq</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lambda_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_state_dicts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">lassonet.interfaces.HistoryItem</span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#lassonet.LassoNetCoxRegressor.path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Train LassoNet on a lambda_ path.
+The path is defined by the class parameters:
+start at <cite>lambda_start</cite> and increment according to <cite>path_multiplier</cite>.
+The path will stop when no feature is being used anymore.
+callback will be called at each step on (model, history)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lassonet.LassoNetCoxRegressor.score">
+<span class="sig-name descname"><span class="pre">score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lassonet.LassoNetCoxRegressor.score" title="Permalink to this definition">¶</a></dt>
+<dd><p>Concordance index</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lassonet.LassoNetCoxRegressor.set_params">
+<span class="sig-name descname"><span class="pre">set_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lassonet.LassoNetCoxRegressor.set_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the parameters of this estimator.</p>
+<p>The method works on simple estimators as well as on nested objects
+(such as <code class="xref py py-class docutils literal notranslate"><span class="pre">Pipeline</span></code>). The latter have
+parameters of the form <code class="docutils literal notranslate"><span class="pre">&lt;component&gt;__&lt;parameter&gt;</span></code> so that it’s
+possible to update each component of a nested object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>**params</strong> (<em>dict</em>) – Estimator parameters.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>self</strong> – Estimator instance.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>estimator instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lassonet.LassoNetRegressorCV">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">lassonet.</span></span><span class="sig-name descname"><span class="pre">LassoNetRegressorCV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cv</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lassonet.LassoNetRegressorCV" title="Permalink to this definition">¶</a></dt>
+<dd><p>See BaseLassoNet for the parameters</p>
+<dl class="simple">
+<dt>cv<span class="classifier">int, cross-validation generator or iterable, default=None</span></dt><dd><p>Determines the cross-validation splitting strategy.
+Default is 5-fold cross-validation.
+See &lt;<a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.check_cv.html">https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.check_cv.html</a>&gt;</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="lassonet.LassoNetRegressorCV.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lassonet.LassoNetRegressorCV.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Train the model.
+Note that if <cite>lambda_</cite> is not given, the trained model
+will most likely not use any feature.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lassonet.LassoNetRegressorCV.get_params">
+<span class="sig-name descname"><span class="pre">get_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lassonet.LassoNetRegressorCV.get_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get parameters for this estimator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>deep</strong> (<em>bool</em><em>, </em><em>default=True</em>) – If True, will return the parameters for this estimator and
+contained subobjects that are estimators.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>params</strong> – Parameter names mapped to their values.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lassonet.LassoNetRegressorCV.path">
+<span class="sig-name descname"><span class="pre">path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_state_dicts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lassonet.LassoNetRegressorCV.path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Train LassoNet on a lambda_ path.
+The path is defined by the class parameters:
+start at <cite>lambda_start</cite> and increment according to <cite>path_multiplier</cite>.
+The path will stop when no feature is being used anymore.
+callback will be called at each step on (model, history)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lassonet.LassoNetRegressorCV.score">
+<span class="sig-name descname"><span class="pre">score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lassonet.LassoNetRegressorCV.score" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the coefficient of determination of the prediction.</p>
+<p>The coefficient of determination <span class="math notranslate nohighlight">\(R^2\)</span> is defined as
+<span class="math notranslate nohighlight">\((1 - \frac{u}{v})\)</span>, where <span class="math notranslate nohighlight">\(u\)</span> is the residual
+sum of squares <code class="docutils literal notranslate"><span class="pre">((y_true</span> <span class="pre">-</span> <span class="pre">y_pred)**</span> <span class="pre">2).sum()</span></code> and <span class="math notranslate nohighlight">\(v\)</span>
+is the total sum of squares <code class="docutils literal notranslate"><span class="pre">((y_true</span> <span class="pre">-</span> <span class="pre">y_true.mean())</span> <span class="pre">**</span> <span class="pre">2).sum()</span></code>.
+The best possible score is 1.0 and it can be negative (because the
+model can be arbitrarily worse). A constant model that always predicts
+the expected value of <cite>y</cite>, disregarding the input features, would get
+a <span class="math notranslate nohighlight">\(R^2\)</span> score of 0.0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>array-like of shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – Test samples. For some estimators this may be a precomputed
+kernel matrix or a list of generic objects instead with shape
+<code class="docutils literal notranslate"><span class="pre">(n_samples,</span> <span class="pre">n_samples_fitted)</span></code>, where <code class="docutils literal notranslate"><span class="pre">n_samples_fitted</span></code>
+is the number of samples used in the fitting for the estimator.</p></li>
+<li><p><strong>y</strong> (<em>array-like of shape</em><em> (</em><em>n_samples</em><em>,</em><em>) or </em><em>(</em><em>n_samples</em><em>, </em><em>n_outputs</em><em>)</em>) – True values for <cite>X</cite>.</p></li>
+<li><p><strong>sample_weight</strong> (<em>array-like of shape</em><em> (</em><em>n_samples</em><em>,</em><em>)</em><em>, </em><em>default=None</em>) – Sample weights.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>score</strong> – <span class="math notranslate nohighlight">\(R^2\)</span> of <code class="docutils literal notranslate"><span class="pre">self.predict(X)</span></code> wrt. <cite>y</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The <span class="math notranslate nohighlight">\(R^2\)</span> score used when calling <code class="docutils literal notranslate"><span class="pre">score</span></code> on a regressor uses
+<code class="docutils literal notranslate"><span class="pre">multioutput='uniform_average'</span></code> from version 0.23 to keep consistent
+with default value of <code class="xref py py-func docutils literal notranslate"><span class="pre">r2_score()</span></code>.
+This influences the <code class="docutils literal notranslate"><span class="pre">score</span></code> method of all the multioutput
+regressors (except for
+<code class="xref py py-class docutils literal notranslate"><span class="pre">MultiOutputRegressor</span></code>).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lassonet.LassoNetRegressorCV.set_params">
+<span class="sig-name descname"><span class="pre">set_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lassonet.LassoNetRegressorCV.set_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the parameters of this estimator.</p>
+<p>The method works on simple estimators as well as on nested objects
+(such as <code class="xref py py-class docutils literal notranslate"><span class="pre">Pipeline</span></code>). The latter have
+parameters of the form <code class="docutils literal notranslate"><span class="pre">&lt;component&gt;__&lt;parameter&gt;</span></code> so that it’s
+possible to update each component of a nested object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>**params</strong> (<em>dict</em>) – Estimator parameters.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>self</strong> – Estimator instance.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>estimator instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lassonet.LassoNetClassifierCV">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">lassonet.</span></span><span class="sig-name descname"><span class="pre">LassoNetClassifierCV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cv</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lassonet.LassoNetClassifierCV" title="Permalink to this definition">¶</a></dt>
+<dd><p>See BaseLassoNet for the parameters</p>
+<dl class="simple">
+<dt>cv<span class="classifier">int, cross-validation generator or iterable, default=None</span></dt><dd><p>Determines the cross-validation splitting strategy.
+Default is 5-fold cross-validation.
+See &lt;<a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.check_cv.html">https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.check_cv.html</a>&gt;</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="lassonet.LassoNetClassifierCV.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lassonet.LassoNetClassifierCV.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Train the model.
+Note that if <cite>lambda_</cite> is not given, the trained model
+will most likely not use any feature.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lassonet.LassoNetClassifierCV.get_params">
+<span class="sig-name descname"><span class="pre">get_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lassonet.LassoNetClassifierCV.get_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get parameters for this estimator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>deep</strong> (<em>bool</em><em>, </em><em>default=True</em>) – If True, will return the parameters for this estimator and
+contained subobjects that are estimators.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>params</strong> – Parameter names mapped to their values.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lassonet.LassoNetClassifierCV.path">
+<span class="sig-name descname"><span class="pre">path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_state_dicts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lassonet.LassoNetClassifierCV.path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Train LassoNet on a lambda_ path.
+The path is defined by the class parameters:
+start at <cite>lambda_start</cite> and increment according to <cite>path_multiplier</cite>.
+The path will stop when no feature is being used anymore.
+callback will be called at each step on (model, history)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lassonet.LassoNetClassifierCV.score">
+<span class="sig-name descname"><span class="pre">score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lassonet.LassoNetClassifierCV.score" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the mean accuracy on the given test data and labels.</p>
+<p>In multi-label classification, this is the subset accuracy
+which is a harsh metric since you require for each sample that
+each label set be correctly predicted.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>array-like of shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – Test samples.</p></li>
+<li><p><strong>y</strong> (<em>array-like of shape</em><em> (</em><em>n_samples</em><em>,</em><em>) or </em><em>(</em><em>n_samples</em><em>, </em><em>n_outputs</em><em>)</em>) – True labels for <cite>X</cite>.</p></li>
+<li><p><strong>sample_weight</strong> (<em>array-like of shape</em><em> (</em><em>n_samples</em><em>,</em><em>)</em><em>, </em><em>default=None</em>) – Sample weights.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>score</strong> – Mean accuracy of <code class="docutils literal notranslate"><span class="pre">self.predict(X)</span></code> wrt. <cite>y</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lassonet.LassoNetClassifierCV.set_params">
+<span class="sig-name descname"><span class="pre">set_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lassonet.LassoNetClassifierCV.set_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the parameters of this estimator.</p>
+<p>The method works on simple estimators as well as on nested objects
+(such as <code class="xref py py-class docutils literal notranslate"><span class="pre">Pipeline</span></code>). The latter have
+parameters of the form <code class="docutils literal notranslate"><span class="pre">&lt;component&gt;__&lt;parameter&gt;</span></code> so that it’s
+possible to update each component of a nested object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>**params</strong> (<em>dict</em>) – Estimator parameters.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>self</strong> – Estimator instance.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>estimator instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lassonet.LassoNetCoxRegressorCV">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">lassonet.</span></span><span class="sig-name descname"><span class="pre">LassoNetCoxRegressorCV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cv</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lassonet.LassoNetCoxRegressorCV" title="Permalink to this definition">¶</a></dt>
+<dd><p>See BaseLassoNet for the parameters</p>
+<dl class="simple">
+<dt>cv<span class="classifier">int, cross-validation generator or iterable, default=None</span></dt><dd><p>Determines the cross-validation splitting strategy.
+Default is 5-fold cross-validation.
+See &lt;<a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.check_cv.html">https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.check_cv.html</a>&gt;</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="lassonet.LassoNetCoxRegressorCV.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lassonet.LassoNetCoxRegressorCV.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Train the model.
+Note that if <cite>lambda_</cite> is not given, the trained model
+will most likely not use any feature.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lassonet.LassoNetCoxRegressorCV.get_params">
+<span class="sig-name descname"><span class="pre">get_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lassonet.LassoNetCoxRegressorCV.get_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get parameters for this estimator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>deep</strong> (<em>bool</em><em>, </em><em>default=True</em>) – If True, will return the parameters for this estimator and
+contained subobjects that are estimators.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>params</strong> – Parameter names mapped to their values.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lassonet.LassoNetCoxRegressorCV.path">
+<span class="sig-name descname"><span class="pre">path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_state_dicts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lassonet.LassoNetCoxRegressorCV.path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Train LassoNet on a lambda_ path.
+The path is defined by the class parameters:
+start at <cite>lambda_start</cite> and increment according to <cite>path_multiplier</cite>.
+The path will stop when no feature is being used anymore.
+callback will be called at each step on (model, history)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lassonet.LassoNetCoxRegressorCV.score">
+<span class="sig-name descname"><span class="pre">score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lassonet.LassoNetCoxRegressorCV.score" title="Permalink to this definition">¶</a></dt>
+<dd><p>Concordance index</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lassonet.LassoNetCoxRegressorCV.set_params">
+<span class="sig-name descname"><span class="pre">set_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lassonet.LassoNetCoxRegressorCV.set_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the parameters of this estimator.</p>
 <p>The method works on simple estimators as well as on nested objects
 (such as <code class="xref py py-class docutils literal notranslate"><span class="pre">Pipeline</span></code>). The latter have
