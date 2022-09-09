@@ -62,6 +62,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         gamma_skip=0.0,
         path_multiplier=1.02,
         M=10,
+        groups=None,
         dropout=0,
         batch_size=None,
         optim=None,
@@ -98,6 +99,10 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             the penalty parameter over the path
         M : float, default=10.0
             Hierarchy parameter.
+        groups : None or list of lists
+            Use group LassoNet regularization.
+            `groups` is a list of list such that `groups[i]`
+            contains the indices of the features in the i-th group.
         dropout : float, default = None
         batch_size : int, default=None
             If None, does not use batches. Batches are shuffled at each epoch.
@@ -142,6 +147,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         self.gamma_skip = gamma_skip
         self.path_multiplier = path_multiplier
         self.M = M
+        self.groups = groups
         self.dropout = dropout
         self.batch_size = batch_size
         self.optim = optim
@@ -220,7 +226,11 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         if self.torch_seed is not None:
             torch.manual_seed(self.torch_seed)
         self.model = LassoNet(
-            X.shape[1], *self.hidden_dims, output_shape, dropout=self.dropout
+            X.shape[1],
+            *self.hidden_dims,
+            output_shape,
+            groups=self.groups,
+            dropout=self.dropout,
         ).to(self.device)
 
     def _cast_input(self, X, y=None):
@@ -504,7 +514,11 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         if self.model is None:
             output_shape, input_shape = state_dict["skip.weight"].shape
             self.model = LassoNet(
-                input_shape, *self.hidden_dims, output_shape, dropout=self.dropout
+                input_shape,
+                *self.hidden_dims,
+                output_shape,
+                groups=self.groups,
+                dropout=self.dropout,
             ).to(self.device)
 
         self.model.load_state_dict(state_dict)

@@ -61,3 +61,28 @@ def inplace_prox(beta, theta, lambda_, lambda_bar, M):
     beta.weight.data, theta.weight.data = prox(
         beta.weight.data, theta.weight.data, lambda_=lambda_, lambda_bar=lambda_bar, M=M
     )
+
+
+def inplace_group_prox(groups, beta, theta, lambda_, lambda_bar, M):
+    """
+    groups is an iterable such that group[i] contains the indices of features in group i
+    """
+    beta_ = beta.weight.data
+    theta_ = theta.weight.data
+    beta_ans = torch.empty_like(beta_)
+    theta_ans = torch.empty_like(theta_)
+    for g in groups:
+        group_beta = beta_[:, g]
+        group_beta_shape = group_beta.shape
+        group_theta = theta_[:, g]
+        group_theta_shape = group_theta.shape
+        group_beta, group_theta = prox(
+            group_beta.reshape(-1),
+            group_theta.reshape(-1),
+            lambda_=lambda_,
+            lambda_bar=lambda_bar,
+            M=M,
+        )
+        beta_ans[:, g] = group_beta.reshape(*group_beta_shape)
+        theta_ans[:, g] = group_theta.reshape(*group_theta_shape)
+    beta.weight.data, theta.weight.data = beta_ans, theta_ans
