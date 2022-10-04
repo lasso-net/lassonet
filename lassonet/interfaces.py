@@ -465,7 +465,8 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                 is_dense = False
                 if current_lambda / lambda_start < 2:
                     warnings.warn(
-                        f"lambda_start={self.lambda_start:.3f} "
+                        f"lambda_start={lambda_start:.3f} "
+                        f"{'(selected automatically) ' * (self.lambda_start == 'auto')}"
                         "might be too large.\n"
                         f"Features start to disappear at {current_lambda=:.3f}."
                     )
