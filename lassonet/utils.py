@@ -29,7 +29,6 @@ if hasattr(torch.Tensor, "scatter_reduce_"):
             dim=dim, index=index, src=src, reduce=reduce, include_self=False
         )
 
-
 else:
     scatter_reduce = torch.scatter_reduce
 

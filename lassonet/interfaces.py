@@ -3,6 +3,7 @@ from abc import ABCMeta, abstractmethod, abstractstaticmethod
 from dataclasses import dataclass
 from functools import partial
 import itertools
+import sys
 from typing import List
 import warnings
 
@@ -16,6 +17,8 @@ from sklearn.base import (
 from sklearn.model_selection import check_cv, train_test_split
 import torch
 from tqdm import tqdm
+
+from lassonet.utils import is_wrong
 
 from .model import LassoNet
 from .cox import CoxPHLoss, concordance_index
@@ -186,6 +189,8 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
 
         self.model = None
         self.class_weight = class_weight
+        self.tie_approximation = tie_approximation
+
         if self.class_weight is not None:
             assert isinstance(
                 self, LassoNetClassifier
@@ -306,6 +311,17 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                         + self.gamma * model.l2_regularization()
                         + self.gamma_skip * model.l2_regularization_skip()
                     )
+                    if ans + 1 == ans:
+                        print(f"Loss is {ans}", file=sys.stderr)
+                        print(f"Did you normalize input?", file=sys.stderr)
+                        print(
+                            f"Loss: {self.criterion(model(X_train[batch]), y_train[batch])}"
+                        )
+                        print(f"l2_regularization: {model.l2_regularization()}")
+                        print(
+                            f"l2_regularization_skip: {model.l2_regularization_skip()}"
+                        )
+                        assert False
                     ans.backward()
                     loss += ans.item() * len(batch) / n_train
                     return ans
