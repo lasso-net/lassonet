@@ -26,6 +26,8 @@ print("Best model scored", model.score(X_test, y_test))
 print("Lambda =", model.best_lambda_)
 ```
 
+You should always try to give normalized data to LassoNet as it uses neural networks under the hood.
+
 You can read the full [documentation](https://lassonet.ml/lassonet/api/) or read the [examples](https://github.com/lasso-net/lassonet/tree/master/examples) that cover all features.
 
 ## Features
