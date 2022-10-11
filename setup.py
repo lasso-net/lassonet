@@ -8,7 +8,7 @@ def read(fname):
 
 setup(
     name="lassonet",
-    version="0.0.12",
+    version="0.0.13",
     author="Louis Abraham, Ismael Lemhadri",
     author_email="louis.abraham@yahoo.fr, lemhadri@stanford.edu",
     license="MIT",
