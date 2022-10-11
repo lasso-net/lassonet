@@ -18,8 +18,6 @@ from sklearn.model_selection import check_cv, train_test_split
 import torch
 from tqdm import tqdm
 
-from lassonet.utils import is_wrong
-
 from .model import LassoNet
 from .cox import CoxPHLoss, concordance_index
 
