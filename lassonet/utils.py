@@ -25,7 +25,7 @@ if hasattr(torch.Tensor, "scatter_reduce_"):
         src = input
         if output_size is None:
             output_size = index.max() + 1
-        return torch.empty(output_size).scatter_reduce(
+        return torch.empty(output_size, device=input.device).scatter_reduce(
             dim=dim, index=index, src=src, reduce=reduce, include_self=False
         )
 
