@@ -237,9 +237,13 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         ).to(self.device)
 
     def _cast_input(self, X, y=None):
+        if hasattr(X, "to_numpy"):
+            X = X.to_numpy()
         X = torch.FloatTensor(X).to(self.device)
         if y is None:
             return X
+        if hasattr(y, "to_numpy"):
+            y = y.to_numpy()
         y = self._convert_y(y)
         return X, y
 
@@ -326,6 +330,8 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
 
                 optimizer.step(closure)
                 model.prox(lambda_=lambda_ * optimizer.param_groups[0]["lr"], M=self.M)
+            print("epoch:", epoch)
+            print("loss:", loss)
 
             if epoch == 0:
                 # fallback to running loss of first epoch
@@ -360,7 +366,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             objective=loss + lambda_ * reg,
             loss=loss,
             val_objective=val_obj,
-            val_loss=val_obj - lambda_ * reg,
+            val_loss=val_obj - lambda_ * reg,  # TODO remove l2 reg
             regularization=reg,
             l2_regularization=l2_regularization,
             l2_regularization_skip=l2_regularization_skip,
@@ -645,6 +651,11 @@ class BaseLassoNetCV(BaseLassoNet, metaclass=ABCMeta):
         *,
         return_state_dicts=True,
     ):
+        if hasattr(X, "to_numpy"):
+            X = X.to_numpy()
+        if hasattr(y, "to_numpy"):
+            y = y.to_numpy()
+
         raw_lambdas_ = []
         self.raw_scores_ = []
         self.raw_paths_ = []
