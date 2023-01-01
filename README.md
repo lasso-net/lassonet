@@ -1,4 +1,5 @@
 [![PyPI version](https://badge.fury.io/py/lassonet.svg)](https://badge.fury.io/py/lassonet)
+[![Downloads](https://static.pepy.tech/badge/lassonet)](https://pepy.tech/project/lassonet)
 
 # LassoNet
 
