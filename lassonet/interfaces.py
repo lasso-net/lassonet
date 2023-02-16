@@ -481,7 +481,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                 patience=self.patience_path,
                 return_state_dict=return_state_dicts,
             )
-            if is_dense and self.model.selected_count() < X.shape[1]:
+            if is_dense and self.model.selected_count() < X_train.shape[1]:
                 is_dense = False
                 if current_lambda / lambda_start < 2:
                     warnings.warn(
