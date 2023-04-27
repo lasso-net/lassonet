@@ -55,4 +55,4 @@ LassoNet's website is [https://lassonet.ml](https://lassonet.ml). It contains ma
 ## References
 
 - Lemhadri, Ismael, Feng Ruan, Louis Abraham, and Robert Tibshirani. "LassoNet: A Neural Network with Feature Sparsity." Journal of Machine Learning Research 22, no. 127 (2021). [pdf](https://arxiv.org/pdf/1907.12207.pdf) [bibtex](https://github.com/lasso-net/lassonet/blob/master/citation.bib)
-- Yang, Xuelin, Louis Abraham, Sejin Kim, Petr Smirnov, Feng Ruan, Benjamin Haibe-Kains, and Robert Tibshirani. "FastCPH: Efficient Survival Analysis for Neural Networks." arXiv preprint arXiv:2208.09793 (2022). [pdf](https://arxiv.org/pdf/2208.09793.pdf)
+- Yang, Xuelin, Louis Abraham, Sejin Kim, Petr Smirnov, Feng Ruan, Benjamin Haibe-Kains, and Robert Tibshirani. "FastCPH: Efficient Survival Analysis for Neural Networks." In NeurIPS 2022 Workshop on Learning from Time Series for Health. [pdf](https://arxiv.org/pdf/2208.09793.pdf)
