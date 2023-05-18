@@ -29,6 +29,7 @@ setup(
         "matplotlib",
         "sortedcontainers",
         "tqdm",
+        "pandas",
     ],
     tests_require=["pytest"],
     python_requires=">=3.8",
