@@ -29,7 +29,7 @@ print("Lambda =", model.best_lambda_)
 
 You should always try to give normalized data to LassoNet as it uses neural networks under the hood.
 
-You can read the full [documentation](https://lassonet.ml/lassonet/api/) or read the [examples](https://github.com/lasso-net/lassonet/tree/master/examples) that cover all features.
+You can read the full [documentation](https://https://lasso-net.github.io//lassonet/api/) or read the [examples](https://github.com/lasso-net/lassonet/tree/master/examples) that cover all features.
 
 ## Features
 
@@ -50,7 +50,7 @@ Since then, we integrated support for cross-validation (5-fold by default) in th
 
 ## Website
 
-LassoNet's website is [https://lassonet.ml](https://lassonet.ml). It contains many useful references including the paper, live talks and additional documentation.
+LassoNet's website is [https:lasso-net.github.io/](https://lasso-net.github.io/). It contains many useful references including the paper, live talks and additional documentation.
 
 ## References
 
