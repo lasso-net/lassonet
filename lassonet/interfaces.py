@@ -1,13 +1,14 @@
-from itertools import islice
+import itertools
+import sys
+import warnings
 from abc import ABCMeta, abstractmethod, abstractstaticmethod
 from dataclasses import dataclass
 from functools import partial
-import itertools
-import sys
+from itertools import islice
 from typing import List
-import warnings
 
 import numpy as np
+import torch
 from sklearn.base import (
     BaseEstimator,
     ClassifierMixin,
@@ -15,11 +16,10 @@ from sklearn.base import (
     RegressorMixin,
 )
 from sklearn.model_selection import check_cv, train_test_split
-import torch
 from tqdm import tqdm
 
-from .model import LassoNet
 from .cox import CoxPHLoss, concordance_index
+from .model import LassoNet
 
 
 def abstractattr(f):
@@ -330,8 +330,6 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
 
                 optimizer.step(closure)
                 model.prox(lambda_=lambda_ * optimizer.param_groups[0]["lr"], M=self.M)
-            print("epoch:", epoch)
-            print("loss:", loss)
 
             if epoch == 0:
                 # fallback to running loss of first epoch

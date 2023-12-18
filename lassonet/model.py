@@ -91,7 +91,6 @@ class LassoNet(nn.Module):
                         M=M,
                     )
                     if torch.abs(beta - new_beta).max() < 1e-5:
-                        # print(_)
                         break
                     beta = new_beta
                 return (torch.norm(beta, p=2, dim=0) == 0).sum()
