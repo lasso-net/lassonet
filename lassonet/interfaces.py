@@ -334,6 +334,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             if epoch == 0:
                 # fallback to running loss of first epoch
                 real_loss = loss
+            model.eval()
             val_obj = validation_obj()
             if val_obj < self.tol * best_val_obj:
                 best_val_obj = val_obj
