@@ -76,8 +76,6 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         verbose=1,
         random_state=None,
         torch_seed=None,
-        class_weight=None,
-        tie_approximation=None,
     ):
         """
         Parameters
@@ -134,11 +132,6 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             Random state for validation
         torch_seed
             Torch state for model random initialization
-        class_weight : iterable of float, default=None
-            If specified, weights for different classes in training.
-            There must be one number per class.
-        tie_approximation: str
-            Tie approximation for the Cox model, must be one of ("breslow", "efron").
         """
         assert isinstance(hidden_dims, tuple), "`hidden_dims` must be a tuple"
         self.hidden_dims = hidden_dims
@@ -186,26 +179,6 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         self.torch_seed = torch_seed
 
         self.model = None
-        self.class_weight = class_weight
-        self.tie_approximation = tie_approximation
-
-        if self.class_weight is not None:
-            assert isinstance(
-                self, LassoNetClassifier
-            ), "Weighted loss is only for classification"
-            self.class_weight = torch.FloatTensor(self.class_weight).to(self.device)
-            self.criterion = torch.nn.CrossEntropyLoss(
-                weight=self.class_weight, reduction="mean"
-            )
-        if isinstance(self, LassoNetCoxRegressor):
-            assert (
-                self.batch_size is None
-            ), "Cox regression does not work with mini-batches"
-            assert (
-                tie_approximation in CoxPHLoss.allowed
-            ), f"`tie_approximation` must be one of {CoxPHLoss.allowed}"
-
-            self.criterion = CoxPHLoss(method=tie_approximation)
 
     @abstractmethod
     def _convert_y(self, y) -> torch.TensorType:
@@ -224,8 +197,6 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
     def _init_model(self, X, y):
         """Create a torch model"""
         output_shape = self._output_shape(y)
-        if self.class_weight is not None:
-            assert output_shape == len(self.class_weight)
         if self.torch_seed is not None:
             torch.manual_seed(self.torch_seed)
         self.model = LassoNet(
@@ -577,9 +548,36 @@ class LassoNetClassifier(
     ClassifierMixin,
     BaseLassoNet,
 ):
-    """Use LassoNet as classifier"""
+    """Use LassoNet as classifier
+
+    Parameters
+    ----------
+    class_weight : iterable of float, default=None
+        If specified, weights for different classes in training.
+        There must be one number per class.
+    """
 
     criterion = torch.nn.CrossEntropyLoss(reduction="mean")
+
+    def __init__(self, class_weight=None, **kwargs):
+        BaseLassoNet.__init__(self, **kwargs)
+
+        self.class_weight = class_weight
+
+        if class_weight is not None:
+            self.class_weight = torch.FloatTensor(self.class_weight).to(self.device)
+            self.criterion = torch.nn.CrossEntropyLoss(
+                weight=self.class_weight, reduction="mean"
+            )
+
+    __init__.__doc__ = BaseLassoNet.__init__.__doc__
+
+    def _init_model(self, X, y):
+        output_shape = self._output_shape(y)
+        if self.class_weight is not None:
+            assert output_shape == len(self.class_weight)
+
+        return super()._init_model(X, y)
 
     def _convert_y(self, y) -> torch.TensorType:
         y = torch.LongTensor(y).to(self.device)
@@ -610,9 +608,28 @@ class LassoNetClassifier(
 class LassoNetCoxRegressor(
     BaseLassoNet,
 ):
-    """Use LassoNet for Cox regression"""
+    """Use LassoNet for Cox regression
+
+    Parameters
+    ----------
+    tie_approximation: str
+        Tie approximation for the Cox model, must be one of ("breslow", "efron").
+    """
 
     criterion = None
+
+    def __init__(self, tie_approximation=None, **kwargs):
+        BaseLassoNet.__init__(self, **kwargs)
+
+        assert self.batch_size is None, "Cox regression does not work with mini-batches"
+
+        self.tie_approximation = tie_approximation
+        assert (
+            tie_approximation in CoxPHLoss.allowed
+        ), f"`tie_approximation` must be one of {CoxPHLoss.allowed}"
+        self.criterion = CoxPHLoss(method=tie_approximation)
+
+    __init__.__doc__ = BaseLassoNet.__init__.__doc__
 
     def _convert_y(self, y):
         return torch.FloatTensor(y).to(self.device)
