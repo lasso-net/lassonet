@@ -31,7 +31,9 @@ class CoxPHLoss(torch.nn.Module):
         events = events[idx]
 
         event_ind = events.nonzero().flatten()
-
+        if event_ind.nelement() == 0:
+            return torch.tensor(0.0)
+        
         # numerator
         log_num = log_h[event_ind].mean()
 
