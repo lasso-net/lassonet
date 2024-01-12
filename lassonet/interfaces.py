@@ -91,7 +91,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             Note: lambda_start and path_multiplier will be ignored.
         gamma : float, default=0.0
             l2 penalization on the network
-        gamma : float, default=0.0
+        gamma_skip : float, default=0.0
             l2 penalization on the skip connection
         path_multiplier : float, default=1.02
             Multiplicative factor (:math:`1 + \\epsilon`) to increase
@@ -112,7 +112,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             Maximum number of training epochs for initial training and path computation.
             This is an upper-bound on the effective number of epochs, since the model
             uses early stopping.
-        patience : int or pair of int or None, default=10
+        patience : int or pair of int or None, default=(100, 10)
             Number of epochs to wait without improvement during early stopping.
         tol : float, default=0.99
             Minimum improvement for early stopping: new objective < tol * old objective.
@@ -279,28 +279,34 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                 def closure():
                     nonlocal loss
                     optimizer.zero_grad()
+                    crit = self.criterion(model(X_train[batch]), y_train[batch])
                     ans = (
-                        self.criterion(model(X_train[batch]), y_train[batch])
+                        crit
                         + self.gamma * model.l2_regularization()
                         + self.gamma_skip * model.l2_regularization_skip()
                     )
-                    if ans + 1 == ans:
+                    if not torch.isfinite(ans):
                         print(f"Loss is {ans}", file=sys.stderr)
-                        print(f"Did you normalize input?", file=sys.stderr)
+                        print("Did you normalize input?", file=sys.stderr)
+                        print("Loss::", crit.item())
                         print(
-                            f"Loss: {self.criterion(model(X_train[batch]), y_train[batch])}"
+                            "l2_regularization:",
+                            model.l2_regularization(),
                         )
-                        print(f"l2_regularization: {model.l2_regularization()}")
                         print(
-                            f"l2_regularization_skip: {model.l2_regularization_skip()}"
+                            "l2_regularization_skip:",
+                            model.l2_regularization_skip(),
                         )
                         assert False
                     ans.backward()
-                    loss += ans.item() * len(batch) / n_train
+                    loss += ans.item() * batch_size / n_train
                     return ans
 
                 optimizer.step(closure)
-                model.prox(lambda_=lambda_ * optimizer.param_groups[0]["lr"], M=self.M)
+                model.prox(
+                    lambda_=lambda_ * optimizer.param_groups[0]["lr"],
+                    M=self.M,
+                )
 
             if epoch == 0:
                 # fallback to running loss of first epoch
@@ -357,10 +363,11 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         y_val=None,
         lambda_seq=None,
         lambda_max=float("inf"),
-        return_state_dicts=True,
+        return_state_dicts=False,
         callback=None,
+        disable_lambda_warning=False,
     ) -> List[HistoryItem]:
-        """Train LassoNet on a lambda\_ path.
+        """Train LassoNet on a lambda\\_ path.
         The path is defined by the class parameters:
         start at `lambda_start` and increment according to `path_multiplier`.
         The path will stop when no feature is being used anymore.
@@ -385,21 +392,21 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
 
         # always init model
         self._init_model(X_train, y_train)
-
-        hist.append(
-            self._train(
-                X_train,
-                y_train,
-                X_val,
-                y_val,
-                batch_size=self.batch_size,
-                lambda_=0,
-                epochs=self.n_iters_init,
-                optimizer=self.optim_init(self.model.parameters()),
-                patience=self.patience_init,
-                return_state_dict=return_state_dicts,
+        if self.n_iters_init:
+            hist.append(
+                self._train(
+                    X_train,
+                    y_train,
+                    X_val,
+                    y_val,
+                    batch_size=self.batch_size,
+                    lambda_=0,
+                    epochs=self.n_iters_init,
+                    optimizer=self.optim_init(self.model.parameters()),
+                    patience=self.patience_init,
+                    return_state_dict=return_state_dicts,
+                )
             )
-        )
         if callback is not None:
             callback(self, hist)
         if self.verbose > 1:
@@ -453,7 +460,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             )
             if is_dense and self.model.selected_count() < X_train.shape[1]:
                 is_dense = False
-                if current_lambda / lambda_start < 2:
+                if not disable_lambda_warning and current_lambda < 2 * lambda_start:
                     warnings.warn(
                         f"lambda_start={lambda_start:.3f} "
                         f"{'(selected automatically) ' * (self.lambda_start == 'auto')}"
