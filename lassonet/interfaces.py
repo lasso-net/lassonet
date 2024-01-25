@@ -434,6 +434,8 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                     / optimizer.param_groups[0]["lr"]
                     / 10
                 )
+                if self.verbose > 1:
+                    print(f"lambda_start = {self.lambda_start_:.2e}")
                 lambda_seq = _lambda_seq(self.lambda_start_)
             else:
                 lambda_seq = _lambda_seq(self.lambda_start)
