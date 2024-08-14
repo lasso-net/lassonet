@@ -33,8 +33,8 @@ You can read the full [documentation](https://lasso-net.github.io//lassonet/api/
 
 ## Features
 
-- regression, classification and [Cox regression](https://en.wikipedia.org/wiki/Proportional_hazards_model) with `LassoNetRegressor`, `LassoNetClassifier` and `LassoNetCoxRegressor`.
-- cross-validation with `LassoNetRegressorCV`, `LassoNetClassifierCV` and `LassoNetCoxRegressorCV`
+- regression, classification, [Cox regression](https://en.wikipedia.org/wiki/Proportional_hazards_model) and [interval-censored Cox regression](https://arxiv.org/abs/2206.06885) with `LassoNetRegressor`, `LassoNetClassifier`, `LassoNetCoxRegressor` and `LassoNetIntervalRegressor`.
+- cross-validation with `LassoNetRegressorCV`, `LassoNetClassifierCV`, `LassoNetCoxRegressorCV` and `LassoNetIntervalRegressorCV`
 - group feature selection with the `groups` argument
 - `lambda_start="auto"` heuristic
 

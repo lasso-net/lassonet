@@ -443,6 +443,8 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         # extract first value of lambda_seq
         lambda_seq = iter(lambda_seq)
         lambda_start = next(lambda_seq)
+        while lambda_start == 0:
+            lambda_start = next(lambda_seq)
 
         is_dense = True
         for current_lambda in itertools.chain([lambda_start], lambda_seq):
@@ -656,6 +658,67 @@ class LassoNetCoxRegressor(
         return concordance_index(risk, time, event)
 
 
+class LassoNetIntervalRegressor(BaseLassoNet):
+    """Use LassoNet for Sparse Interval-Censored regression
+
+    See https://arxiv.org/abs/2206.06885
+    """
+
+    class CustomLassoNet(LassoNet):
+        def __init__(self, *dims, groups=None, dropout=None):
+            super().__init__(*dims, groups=groups, dropout=dropout)
+            self.log_sigma = torch.nn.Parameter(torch.tensor(0.0))
+
+        def forward(self, inp):
+            return super().forward(inp), torch.exp(self.log_sigma)
+
+    Fdist = torch.distributions.Normal(0, 1).cdf
+
+    def _convert_y(self, y):
+        y = torch.FloatTensor(y).to(self.device)
+        if len(y.shape) == 1:
+            y = y.view(-1, 1)
+        return y
+
+    def _output_shape(self, y):
+        return 1
+
+    def _init_model(self, X, y):
+        """Create a torch model"""
+        output_shape = self._output_shape(y)
+        if self.torch_seed is not None:
+            torch.manual_seed(self.torch_seed)
+        self.model = LassoNetIntervalRegressor.CustomLassoNet(
+            X.shape[1],
+            *self.hidden_dims,
+            output_shape,
+            groups=self.groups,
+            dropout=self.dropout,
+        ).to(self.device)
+
+    @classmethod
+    def criterion(self, output, y):
+        mo, sigma = output
+        mo = mo.squeeze()
+        us, vs, delta1, delta2, delta3, _ = y.T
+
+        fu = LassoNetIntervalRegressor.Fdist((torch.log(us) - mo) / sigma)
+        fv = LassoNetIntervalRegressor.Fdist((torch.log(vs) - mo) / sigma)
+        return -torch.mean(
+            delta1 * torch.log(fu + 1e-8)
+            + delta2 * torch.log(fv - fu + 1e-8)
+            + delta3 * torch.log(1 - fv + 1e-8)
+        )
+
+    def predict(self, X):
+        self.model.eval()
+        with torch.no_grad():
+            ans, _ = self.model(self._cast_input(X))
+        if isinstance(X, np.ndarray):
+            ans = ans.cpu().numpy()
+        return ans
+
+
 class BaseLassoNetCV(BaseLassoNet, metaclass=ABCMeta):
     def __init__(self, cv=None, **kwargs):
         """
@@ -779,6 +842,10 @@ class LassoNetClassifierCV(BaseLassoNetCV, LassoNetClassifier):
 
 
 class LassoNetCoxRegressorCV(BaseLassoNetCV, LassoNetCoxRegressor):
+    pass
+
+
+class LassoNetIntervalRegressorCV(BaseLassoNetCV, LassoNetIntervalRegressor):
     pass
 
 
