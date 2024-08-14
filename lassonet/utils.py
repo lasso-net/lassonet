@@ -1,3 +1,4 @@
+from itertools import zip_longest
 from typing import Iterable
 import torch
 import scipy.stats
@@ -65,3 +66,27 @@ def confidence_interval(data, confidence=0.95):
         len(data) - 1,
         scale=scipy.stats.sem(data),
     )[1]
+
+
+def selection_probability(paths):
+    """
+    Compute the selection probability of each variable at each lambda value.
+    The lambda paths must be the same for all models.
+    The individual curves are smoothed to that they are monotonically decreasing.
+
+    Returns an array of shape (n_lambdas, n_variables)
+    containing the probability of each variable being selected at each lambda value
+    """
+    n_models = len(paths)
+
+    all_selected = []
+    selected = torch.ones_like(paths[0][0].selected)
+    iterable = zip_longest(
+        *[[it.selected for it in path] for path in paths],
+        fillvalue=torch.zeros_like(paths[0][0].selected),
+    )
+    for its in iterable:
+        sel = sum(its) / n_models
+        selected = torch.minimum(selected, sel)
+        all_selected.append(selected)
+    return all_selected
