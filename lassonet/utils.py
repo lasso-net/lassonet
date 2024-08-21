@@ -1,7 +1,8 @@
 from itertools import zip_longest
 from typing import Iterable
-import torch
+
 import scipy.stats
+import torch
 
 
 def eval_on_path(model, path, X_test, y_test, *, score_function=None):
