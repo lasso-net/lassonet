@@ -29,14 +29,14 @@ print("Lambda =", model.best_lambda_)
 
 You should always try to give normalized data to LassoNet as it uses neural networks under the hood.
 
-You can read the full [documentation](https://lasso-net.github.io//lassonet/api/) or read the [examples](https://github.com/lasso-net/lassonet/tree/master/examples) that cover all features.
+You can read the full [documentation](https://lasso-net.github.io//lassonet/api/) or read the [examples](https://github.com/lasso-net/lassonet/tree/master/examples) that cover most features. 
 
 ## Features
 
 - regression, classification, [Cox regression](https://en.wikipedia.org/wiki/Proportional_hazards_model) and [interval-censored Cox regression](https://arxiv.org/abs/2206.06885) with `LassoNetRegressor`, `LassoNetClassifier`, `LassoNetCoxRegressor` and `LassoNetIntervalRegressor`.
 - cross-validation with `LassoNetRegressorCV`, `LassoNetClassifierCV`, `LassoNetCoxRegressorCV` and `LassoNetIntervalRegressorCV`
 - group feature selection with the `groups` argument
-- `lambda_start="auto"` heuristic
+- `lambda_start="auto"` heuristic (default)
 
 Note that cross-validation, group feature selection and automatic `lambda_start` selection have not been published in papers, you can read the code or [post as issue](https://github.com/lasso-net/lassonet/issues/new) to request more details.
 
@@ -56,3 +56,4 @@ LassoNet's website is [https:lasso-net.github.io/](https://lasso-net.github.io/)
 
 - Lemhadri, Ismael, Feng Ruan, Louis Abraham, and Robert Tibshirani. "LassoNet: A Neural Network with Feature Sparsity." Journal of Machine Learning Research 22, no. 127 (2021). [pdf](https://arxiv.org/pdf/1907.12207.pdf) [bibtex](https://github.com/lasso-net/lassonet/blob/master/citation.bib)
 - Yang, Xuelin, Louis Abraham, Sejin Kim, Petr Smirnov, Feng Ruan, Benjamin Haibe-Kains, and Robert Tibshirani. "FastCPH: Efficient Survival Analysis for Neural Networks." In NeurIPS 2022 Workshop on Learning from Time Series for Health. [pdf](https://arxiv.org/pdf/2208.09793.pdf)
+- Meixide, Carlos García, Marcos Matabuena, Louis Abraham, and Michael R. Kosorok. "Neural interval‐censored survival regression with feature selection." Statistical Analysis and Data Mining: The ASA Data Science Journal 17, no. 4 (2024): e11704. [pdf](https://arxiv.org/pdf/2206.06885)
