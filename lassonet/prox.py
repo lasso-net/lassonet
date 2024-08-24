@@ -36,7 +36,7 @@ def prox(v, u, *, lambda_, lambda_bar, M):
 
     norm_v = torch.norm(v, p=2, dim=0)
 
-    x = F.relu(1 - a_s / norm_v) / (1 + s * M ** 2)
+    x = F.relu(1 - a_s / norm_v) / (1 + s * M**2)
 
     w = M * x * norm_v
     intervals = soft_threshold(lambda_bar, u_abs_sorted)

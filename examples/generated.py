@@ -31,7 +31,7 @@ def strong_linear():
     linear = X.dot(coef)
     noise = np.random.randn(n)
     x1, x2, x3, *_ = X.T
-    nonlinear = 2 * (x1 ** 3 - 3 * x1) + 4 * (x2 ** 2 * x3 - x3)
+    nonlinear = 2 * (x1**3 - 3 * x1) + 4 * (x2**2 * x3 - x3)
     y = 6 * linear + 8 * noise + nonlinear
     return X, y
 
