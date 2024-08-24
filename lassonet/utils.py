@@ -1,8 +1,11 @@
 from itertools import zip_longest
-from typing import Iterable
+from typing import TYPE_CHECKING, Iterable, List
 
 import scipy.stats
 import torch
+
+if TYPE_CHECKING:
+    from lassonet.interfaces import HistoryItem
 
 
 def eval_on_path(model, path, X_test, y_test, *, score_function=None):
@@ -69,18 +72,28 @@ def confidence_interval(data, confidence=0.95):
     )[1]
 
 
-def selection_probability(paths):
-    """
-    Compute the selection probability of each variable at each lambda value.
-    The lambda paths must be the same for all models.
+def selection_probability(paths: List[List["HistoryItem"]]):
+    """Compute the selection probability of each feature at each step.
     The individual curves are smoothed to that they are monotonically decreasing.
 
-    Returns an array of shape (n_lambdas, n_variables)
-    containing the probability of each variable being selected at each lambda value
+    Input
+    -----
+    paths: List of List of HistoryItem
+        The lambda paths must be the same for all models.
+
+    Output
+    ------
+    prob: torch.Tensor
+        Tensor of shape (n_steps, n_features) containing the selection probability
+        of each feature at lambda value.
+    expected_wrong: tuple of (Tensor, LongTensor)
+        Expected number of wrong features.
+        (values, indices) where values are the expected number of wrong features
+        and indices are the order of the selected features.
     """
     n_models = len(paths)
 
-    all_selected = []
+    prob = []
     selected = torch.ones_like(paths[0][0].selected)
     iterable = zip_longest(
         *[[it.selected for it in path] for path in paths],
@@ -89,5 +102,11 @@ def selection_probability(paths):
     for its in iterable:
         sel = sum(its) / n_models
         selected = torch.minimum(selected, sel)
-        all_selected.append(selected)
-    return all_selected
+        prob.append(selected)
+    prob = torch.stack(prob)
+
+    expected_wrong = (
+        prob.shape[1] * (prob.mean(dim=1, keepdim=True)) ** 2 / (2 * prob - 1)
+    )
+    expected_wrong[prob <= 0.5] = float("inf")
+    return prob, expected_wrong.min(axis=0).values.sort()

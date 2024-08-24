@@ -1,11 +1,12 @@
 import itertools
+import random
 import sys
 import warnings
 from abc import ABCMeta, abstractmethod, abstractstaticmethod
 from dataclasses import dataclass
 from functools import partial
 from itertools import islice
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 import torch
@@ -17,6 +18,8 @@ from sklearn.base import (
 )
 from sklearn.model_selection import check_cv, train_test_split
 from tqdm import tqdm
+
+from lassonet.utils import selection_probability
 
 from .cox import CoxPHLoss, concordance_index
 from .model import LassoNet
@@ -372,6 +375,8 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         start at `lambda_start` and increment according to `path_multiplier`.
         The path will stop when no feature is being used anymore.
         callback will be called at each step on (model, history)
+
+        If you pass lambda_seq=[], only the dense model will be trained.
         """
         assert (X_val is None) == (
             y_val is None
@@ -440,6 +445,10 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             else:
                 lambda_seq = _lambda_seq(self.lambda_start)
 
+        if not lambda_seq:
+            # support lambda_seq=[] to only train the dense model
+            return hist
+
         # extract first value of lambda_seq
         lambda_seq = iter(lambda_seq)
         lambda_start = next(lambda_seq)
@@ -487,6 +496,79 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         """When does each feature disappear on the path?"""
 
         return hist
+
+    def _stability_selection_path(self, X, y, lambda_seq=None) -> List[HistoryItem]:
+        """Compute a path on a random half of the data.
+        Used for stability selection.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Training data
+        y : array-like of shape (n_samples,) or (n_samples, n_outputs)
+            Target values
+        lambda_seq : iterable of float
+
+        Returns
+        -------
+        List[HistoryItem]
+        """
+        n = len(X)
+        shuffle = list(range(n))
+        random.shuffle(shuffle)
+        train_ind = shuffle[n // 2 : n]
+        return self.path(X[train_ind], y[train_ind], lambda_seq=lambda_seq)
+
+    def stability_selection(self, X, y, n_models=20) -> Tuple[
+        List[List[HistoryItem]],
+        torch.Tensor,
+        Tuple[torch.Tensor, torch.LongTensor],
+    ]:
+        """Compute stability selection paths to be passed to
+        `lassonet.utils.selection_probability`.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Training data
+        y : array-like of shape (n_samples,) or (n_samples, n_outputs)
+            Target values
+        n_models : int
+            Number of models to train
+
+        Returns
+        -------
+        oracle : int
+            Ideal number of features to select.
+        order: LongTensor
+            Order of the selected features.
+        wrong: Tensor
+            Expected number of wrong features.
+        paths: List[List[HistoryItem]]
+        prob: torch.Tensor
+            Tensor of shape (n_steps, n_features) containing the selection probability
+            of each feature at lambda value.
+        """
+        WRONG_THRESHOLD = 1 / 2
+
+        path = self._stability_selection_path(X, y)
+        lambda_seq = [it.lambda_ for it in path]
+        paths = [
+            self._stability_selection_path(X, y, lambda_seq)
+            for _ in tqdm(range(n_models), desc="Stability selection")
+        ]
+        prob, expected_wrong = selection_probability(paths)
+        order = expected_wrong.indices
+        wrong = expected_wrong.values
+        # you cannot get more features wrong than the number of selected features
+        wrong = torch.minimum(wrong, torch.arange(1, len(wrong) + 1))
+
+        if wrong[0] > WRONG_THRESHOLD:
+            oracle = 0
+        else:
+            oracle = int(torch.argmax(wrong[1:] / wrong[:-1])) + 1
+
+        return oracle, order, wrong, paths, prob
 
     @staticmethod
     def _compute_feature_importances(path: List[HistoryItem]):
@@ -621,6 +703,8 @@ class LassoNetCoxRegressor(
 ):
     """Use LassoNet for Cox regression
 
+    y has two dimensions: durations and events
+
     Parameters
     ----------
     tie_approximation: str
@@ -661,6 +745,8 @@ class LassoNetCoxRegressor(
 class LassoNetIntervalRegressor(BaseLassoNet):
     """Use LassoNet for Sparse Interval-Censored regression
 
+    y has 5 dimensions: latent_time_u, latent_time_v, delta_1, delta_2, delta_3
+
     See https://arxiv.org/abs/2206.06885
     """
 
@@ -700,7 +786,7 @@ class LassoNetIntervalRegressor(BaseLassoNet):
     def criterion(self, output, y):
         mo, sigma = output
         mo = mo.squeeze()
-        us, vs, delta1, delta2, delta3, _ = y.T
+        us, vs, delta1, delta2, delta3 = y.T
 
         fu = LassoNetIntervalRegressor.Fdist((torch.log(us) - mo) / sigma)
         fv = LassoNetIntervalRegressor.Fdist((torch.log(vs) - mo) / sigma)
@@ -717,6 +803,12 @@ class LassoNetIntervalRegressor(BaseLassoNet):
         if isinstance(X, np.ndarray):
             ans = ans.cpu().numpy()
         return ans
+
+    def score(self, X_test, y_test):
+        """Concordance index"""
+        _, vs, _, _, delta3 = y_test.T
+        risk = -self.predict(X_test)
+        return concordance_index(risk, vs, (1 - delta3))
 
 
 class BaseLassoNetCV(BaseLassoNet, metaclass=ABCMeta):
@@ -824,12 +916,17 @@ class BaseLassoNetCV(BaseLassoNet, metaclass=ABCMeta):
         self,
         X,
         y,
+        dense=False,
     ):
         """Train the model.
         Note that if `lambda_` is not given, the trained model
         will most likely not use any feature.
+        If `dense` is True, will only train a dense model.
         """
-        self.path(X, y, return_state_dicts=False)
+        if dense:
+            self.path(X, y, lambda_seq=[], return_state_dicts=False)
+        else:
+            self.path(X, y, return_state_dicts=False)
         return self
 
 
