@@ -1,5 +1,6 @@
-from setuptools import setup
 from pathlib import Path
+
+from setuptools import setup
 
 
 def read(fname):
@@ -30,6 +31,12 @@ setup(
         "sortedcontainers",
         "tqdm",
     ],
+    extras_require={
+        "dev": [
+            "sphinx",
+            "black",
+        ]
+    },
     tests_require=["pytest"],
     python_requires=">=3.8",
 )
