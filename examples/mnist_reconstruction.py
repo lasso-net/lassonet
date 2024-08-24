@@ -1,7 +1,8 @@
-from sklearn.datasets import fetch_openml
-from lassonet import LassoNetRegressor
-from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
+from sklearn.datasets import fetch_openml
+from sklearn.metrics import mean_squared_error
+
+from lassonet import LassoNetRegressor
 
 X, y = fetch_openml(name="mnist_784", return_X_y=True)
 filter = y == "3"

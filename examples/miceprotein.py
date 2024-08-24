@@ -8,15 +8,14 @@ trisomic mice who had been exposed to different experimental conditions.
 Each feature is the expression level of one protein.
 """
 
+import matplotlib.pyplot as plt
 from sklearn.datasets import fetch_openml
 from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.model_selection import train_test_split
-import matplotlib.pyplot as plt
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 
-from lassonet import LassoNetClassifier, plot_path
+from lassonet import LassoNetClassifier, plot_cv, plot_path
 from lassonet.interfaces import LassoNetClassifierCV
-from lassonet import plot_cv
 
 X, y = fetch_openml(name="miceprotein", return_X_y=True)
 # Fill missing values with the mean

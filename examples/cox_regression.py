@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.model_selection import train_test_split
-import matplotlib.pyplot as plt
 
 from lassonet import LassoNetCoxRegressor, plot_path
 

@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
-from .interfaces import BaseLassoNetCV
 
+from .interfaces import BaseLassoNetCV
 from .utils import confidence_interval, eval_on_path
 
 

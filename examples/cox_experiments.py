@@ -8,22 +8,18 @@ Install required packages with:
 
 from pathlib import Path
 from time import time
-from matplotlib import pyplot as plt
+
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
-
-from sklearn import preprocessing
-from sklearn.model_selection import train_test_split, StratifiedKFold
-
 import sksurv.datasets
-
-from lassonet import LassoNetCoxRegressorCV
-
 from joblib import Parallel, delayed
+from matplotlib import pyplot as plt
+from sklearn import preprocessing
+from sklearn.model_selection import StratifiedKFold, train_test_split
+from tqdm import tqdm
 from tqdm_joblib import tqdm_joblib
 
-from lassonet import plot_cv
+from lassonet import LassoNetCoxRegressorCV, plot_cv
 from lassonet.utils import confidence_interval
 
 DATA_PATH = Path(__file__).parent / "data"

@@ -4,7 +4,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from .prox import inplace_prox, inplace_group_prox, prox
+from .prox import inplace_group_prox, inplace_prox, prox
 
 
 class LassoNet(nn.Module):

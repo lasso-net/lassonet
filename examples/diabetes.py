@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 
-from sklearn.datasets import load_diabetes
-from sklearn.preprocessing import StandardScaler
-from sklearn.preprocessing import scale
-from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import numpy as np
+from sklearn.datasets import load_diabetes
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, scale
 
 from lassonet import LassoNetRegressor, plot_path
-
 
 dataset = load_diabetes()
 X = dataset.data

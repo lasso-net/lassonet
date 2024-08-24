@@ -1,13 +1,13 @@
 # flake8: noqa
-from .model import LassoNet
-from .prox import prox
 from .interfaces import (
     LassoNetClassifier,
-    LassoNetRegressor,
-    LassoNetCoxRegressor,
     LassoNetClassifierCV,
-    LassoNetRegressorCV,
+    LassoNetCoxRegressor,
     LassoNetCoxRegressorCV,
+    LassoNetRegressor,
+    LassoNetRegressorCV,
     lassonet_path,
 )
-from .plot import plot_path, plot_cv
+from .model import LassoNet
+from .plot import plot_cv, plot_path
+from .prox import prox

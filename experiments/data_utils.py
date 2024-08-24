@@ -1,17 +1,15 @@
 import pickle
+from collections import defaultdict
 from os.path import join
 from pathlib import Path
-from sklearn.model_selection import train_test_split
-from collections import defaultdict
-import numpy as np
-from sklearn.preprocessing import MinMaxScaler
 
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler
 
 # The code to load some of these datasets is reproduced from
 # https://github.com/mfbalin/Concrete-Autoencoders/blob/master/experiments/generate_comparison_figures.py
 
-import numpy as np
-from sklearn.preprocessing import MinMaxScaler
 
 
 def load_mice(one_hot=False):
@@ -181,8 +179,9 @@ def load_epileptic():
     return (X[:8000], Y[:8000]), (X[8000:], Y[8000:])
 
 
-from PIL import Image
 import os
+
+from PIL import Image
 
 
 def load_coil():
@@ -294,6 +293,7 @@ def load_mnist_two_digits(digit1, digit2):
 
 
 import os
+
 from sklearn.preprocessing import MinMaxScaler
 
 

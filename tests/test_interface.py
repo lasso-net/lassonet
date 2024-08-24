@@ -1,6 +1,6 @@
-from lassonet import LassoNetRegressor, LassoNetClassifier
-
 from sklearn.datasets import load_diabetes, load_digits
+
+from lassonet import LassoNetClassifier, LassoNetRegressor
 
 
 def test_regressor():

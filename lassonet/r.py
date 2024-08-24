@@ -1,11 +1,10 @@
 from dataclasses import asdict
-import torch
-from .interfaces import (
-    lassonet_path as _lassonet_path,
-    LassoNetClassifier,
-    LassoNetRegressor,
-)
+
 import numpy as np
+import torch
+
+from .interfaces import LassoNetClassifier, LassoNetRegressor
+from .interfaces import lassonet_path as _lassonet_path
 
 
 def make_writable(x):

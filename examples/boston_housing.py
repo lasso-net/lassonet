@@ -1,15 +1,13 @@
 #!/usr/bin/env python
 
-from sklearn.datasets import load_boston
-from sklearn.preprocessing import StandardScaler
-from sklearn.preprocessing import scale
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
 import numpy as np
+from sklearn.datasets import load_boston
+from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, scale
 
 from lassonet import LassoNetRegressor
-
 
 dataset = load_boston()
 X = dataset.data
