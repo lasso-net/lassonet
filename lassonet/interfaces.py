@@ -526,8 +526,8 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         shuffle = list(range(n))
         random.shuffle(shuffle)
         train_ind = shuffle[n // 2 : n]
-        return super(BaseLassoNet, self).path(
-            X[train_ind], y[train_ind], lambda_seq=lambda_seq
+        return BaseLassoNet.path(
+            self, X[train_ind], y[train_ind], lambda_seq=lambda_seq
         )
 
     def stability_selection(self, X, y, n_models=20) -> Tuple[
