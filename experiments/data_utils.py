@@ -11,7 +11,6 @@ from sklearn.preprocessing import MinMaxScaler
 # https://github.com/mfbalin/Concrete-Autoencoders/blob/master/experiments/generate_comparison_figures.py
 
 
-
 def load_mice(one_hot=False):
     filling_value = -100000
     X = np.genfromtxt(

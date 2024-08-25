@@ -33,6 +33,7 @@ setup(
     ],
     extras_require={
         "dev": [
+            "pre-commit",
             "sphinx",
             "black",
         ]

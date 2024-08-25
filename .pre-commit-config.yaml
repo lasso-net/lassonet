@@ -1,0 +1,26 @@
+repos:
+  - repo: local
+    hooks:
+      - id: black
+        name: Black Formatter
+        entry: black .
+        language: system
+        types: [python]
+
+      - id: isort
+        name: isort
+        entry: isort --profile=black .
+        language: system
+        types: [python]
+
+      - id: make-docs
+        name: Generate Docs
+        entry: make docs
+        language: system
+        pass_filenames: false
+
+      - id: add-docs
+        name: Stage Docs
+        entry: git add docs/api/
+        language: system
+        pass_filenames: false
