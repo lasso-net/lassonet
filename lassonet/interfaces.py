@@ -221,12 +221,21 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         y = self._convert_y(y)
         return X, y
 
-    def fit(self, X, y, *, X_val=None, y_val=None):
+    def fit(self, X, y, *, X_val=None, y_val=None, dense_only=False):
         """Train the model.
         Note that if `lambda_` is not given, the trained model
         will most likely not use any feature.
+        If `dense_only` is True, will only train a dense model.
         """
-        self.path_ = self.path(X, y, X_val=X_val, y_val=y_val, return_state_dicts=False)
+        lambda_seq = [] if dense_only else None
+        self.path_ = self.path(
+            X,
+            y,
+            X_val=X_val,
+            y_val=y_val,
+            return_state_dicts=False,
+            lambda_seq=lambda_seq,
+        )
         return self
 
     def _train(
@@ -918,17 +927,12 @@ class BaseLassoNetCV(BaseLassoNet, metaclass=ABCMeta):
         self,
         X,
         y,
-        dense=False,
     ):
         """Train the model.
         Note that if `lambda_` is not given, the trained model
         will most likely not use any feature.
-        If `dense` is True, will only train a dense model.
         """
-        if dense:
-            self.path(X, y, lambda_seq=[], return_state_dicts=False)
-        else:
-            self.path(X, y, return_state_dicts=False)
+        self.path(X, y, return_state_dicts=False)
         return self
 
 
