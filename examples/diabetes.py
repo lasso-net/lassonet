@@ -27,7 +27,7 @@ model = LassoNetRegressor(
     hidden_dims=(10,),
     verbose=True,
 )
-path = model.path(X_train, y_train)
+path = model.path(X_train, y_train, return_state_dicts=True)
 
 plot_path(model, path, X_test, y_test)
 

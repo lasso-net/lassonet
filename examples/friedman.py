@@ -45,7 +45,7 @@ for path_multiplier in [1.01, 1.001]:
             path_multiplier=path_multiplier,
             M=M,
         )
-        path = model.path(X_train, y_train)
+        path = model.path(X_train, y_train, return_state_dicts=True)
         print(
             "rrmse:",
             min(rrmse(y_test, model.load(save).predict(X_test)) for save in path),

@@ -57,7 +57,7 @@ for generator in [linear, strong_linear, friedman_lockout]:
 
     model = LassoNetRegressor(verbose=True, path_multiplier=1.01, hidden_dims=(10, 10))
 
-    path = model.path(X_train, y_train)
+    path = model.path(X_train, y_train, return_state_dicts=True)
     import matplotlib.pyplot as plt
 
     def score(self, X, y, sample_weight=None):
