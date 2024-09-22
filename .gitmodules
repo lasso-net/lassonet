@@ -1,3 +1,4 @@
 [submodule "examples/spinet"]
 	path = examples/spinet
 	url = https://github.com/meixide/spinet
+    ignore = dirty
