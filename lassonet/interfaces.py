@@ -572,7 +572,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         order = expected_wrong.indices
         wrong = expected_wrong.values
         # you cannot get more features wrong than the number of selected features
-        wrong = torch.minimum(wrong, torch.arange(1, len(wrong) + 1))
+        # wrong = torch.minimum(wrong, torch.arange(1, len(wrong) + 1))
 
         if wrong[0] > WRONG_THRESHOLD:
             oracle = 0
