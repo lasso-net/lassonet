@@ -50,7 +50,7 @@ for path_multiplier in [1.01, 1.001]:
             "rrmse:",
             min(rrmse(y_test, model.load(save).predict(X_test)) for save in path),
         )
-        plot_path(model, path, X_test, y_test, score_function=rrmse)
+        plot_path(model, X_test, y_test, score_function=rrmse)
         plt.savefig(f"friedman_path({path_multiplier})_M({M}).jpg")
 
 path_multiplier = 1.001
@@ -70,7 +70,7 @@ for M in [100, 1_000, 10_000, 100_000]:
         "rrmse:",
         min(rrmse(y_test, model.load(save).predict(X_test)) for save in path),
     )
-    plot_path(model, path, X_test, y_test, score_function=rrmse)
+    plot_path(model, X_test, y_test, score_function=rrmse)
     plt.savefig(f"friedman_path({path_multiplier})_M({M})_backtrack.jpg")
 
 
@@ -92,7 +92,7 @@ for path_multiplier in [1.01, 1.001]:
         "rrmse:",
         min(rrmse(y_test, model.load(save).predict(X_test)) for save in path),
     )
-    plot_path(model, path, X_test, y_test, score_function=rrmse)
+    plot_path(model, X_test, y_test, score_function=rrmse)
     plt.savefig(f"friedman_path({path_multiplier})_M({M})_long.jpg")
 
 # if __name__ == "__main__":
@@ -100,5 +100,5 @@ for path_multiplier in [1.01, 1.001]:
 #     model = LassoNetRegressor(verbose=True, path_multiplier=1.01, hidden_dims=(10, 10))
 #     path = model.path(X_train, y_train)
 
-#     plot_path(model, path, X_test, y_test, score_function=rrmse)
+#     plot_path(model, X_test, y_test, score_function=rrmse)
 #     plt.show()

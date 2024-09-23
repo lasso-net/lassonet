@@ -1490,16 +1490,16 @@ of each feature at lambda value.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="lassonet.plot_path">
-<span class="sig-prename descclassname"><span class="pre">lassonet.</span></span><span class="sig-name descname"><span class="pre">plot_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lassonet.plot_path" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">lassonet.</span></span><span class="sig-name descname"><span class="pre">plot_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lassonet.plot_path" title="Link to this definition">¶</a></dt>
 <dd><p>Plot the evolution of the model on the path, namely:
 - lambda
 - number of selected variables
 - score</p>
+<p>Requires to have called model.path(return_state_dicts=True) beforehand.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> (<a class="reference internal" href="#lassonet.LassoNetClassifier" title="lassonet.LassoNetClassifier"><em>LassoNetClassifier</em></a><em> or </em><a class="reference internal" href="#lassonet.LassoNetRegressor" title="lassonet.LassoNetRegressor"><em>LassoNetRegressor</em></a>)</p></li>
-<li><p><strong>path</strong> – output of model.path</p></li>
 <li><p><strong>X_test</strong> (<em>array-like</em>)</p></li>
 <li><p><strong>y_test</strong> (<em>array-like</em>)</p></li>
 <li><p><strong>score_function</strong> (<em>function</em><em> or </em><em>None</em>) – if None, use score_function=model.score

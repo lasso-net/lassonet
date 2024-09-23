@@ -49,5 +49,5 @@ if __name__ == "__main__":
         "rrmse:",
         min(rrmse(y_test, model.load(save).predict(X_test)) for save in path),
     )
-    plot_path(model, path, X_test, y_test, score_function=rrmse)
+    plot_path(model, X_test, y_test, score_function=rrmse)
     plt.show()

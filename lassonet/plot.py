@@ -4,19 +4,19 @@ from .interfaces import BaseLassoNetCV
 from .utils import confidence_interval, eval_on_path
 
 
-def plot_path(model, path, X_test, y_test, *, score_function=None):
+def plot_path(model, X_test, y_test, *, score_function=None):
     """
     Plot the evolution of the model on the path, namely:
     - lambda
     - number of selected variables
     - score
 
+    Requires to have called model.path(return_state_dicts=True) beforehand.
+
 
     Parameters
     ==========
     model : LassoNetClassifier or LassoNetRegressor
-    path
-        output of model.path
     X_test : array-like
     y_test : array-like
     score_function : function or None
@@ -24,9 +24,11 @@ def plot_path(model, path, X_test, y_test, *, score_function=None):
         score_function must take as input X_test, y_test
     """
     # TODO: plot with manually computed score
-    score = eval_on_path(model, path, X_test, y_test, score_function=score_function)
-    n_selected = [save.selected.sum() for save in path]
-    lambda_ = [save.lambda_ for save in path]
+    score = eval_on_path(
+        model, model.path_, X_test, y_test, score_function=score_function
+    )
+    n_selected = [save.selected.sum() for save in model.path_]
+    lambda_ = [save.lambda_ for save in model.path_]
 
     plt.figure(figsize=(16, 16))
 

@@ -504,6 +504,8 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         self.feature_importances_ = self._compute_feature_importances(hist)
         """When does each feature disappear on the path?"""
 
+        self.path_ = hist
+
         return hist
 
     def _stability_selection_path(self, X, y, lambda_seq=None) -> List[HistoryItem]:
@@ -918,7 +920,6 @@ class BaseLassoNetCV(BaseLassoNet, metaclass=ABCMeta):
                 lambda_seq=[h.lambda_ for h in path[1:-1]],
                 return_state_dicts=return_state_dicts,
             )
-        self.path_ = path
 
         self.best_selected_ = path[-1].selected
         return path

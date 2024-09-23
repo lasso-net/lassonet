@@ -23,9 +23,9 @@ model = LassoNetCoxRegressor(
     tie_approximation="breslow",
 )
 
-path = model.path(X_train, y_train, return_state_dicts=True)
+model.path(X_train, y_train, return_state_dicts=True)
 
-plot_path(model, path, X_test, y_test)
+plot_path(model, X_test, y_test)
 plt.savefig("cox_regression.png")
 
 
@@ -40,5 +40,5 @@ model = LassoNetCoxRegressor(
 
 path = model.path(X_train, y_train)
 
-plot_path(model, path, X_test, y_test)
+plot_path(model, X_test, y_test)
 plt.savefig("cox_regression_efron.png")

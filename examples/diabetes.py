@@ -29,7 +29,7 @@ model = LassoNetRegressor(
 )
 path = model.path(X_train, y_train, return_state_dicts=True)
 
-plot_path(model, path, X_test, y_test)
+plot_path(model, X_test, y_test)
 
 plt.savefig("diabetes.png")
 

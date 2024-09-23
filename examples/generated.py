@@ -66,5 +66,5 @@ for generator in [linear, strong_linear, friedman_lockout]:
 
     model.score = partial(score, model)
 
-    plot_path(model, path, X_test, y_test)
+    plot_path(model, X_test, y_test)
     plt.show()
