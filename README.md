@@ -19,7 +19,7 @@ pip install lassonet
 
 We have designed the code to follow scikit-learn's standards to the extent possible (e.g. [linear_model.Lasso](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Lasso.html)).
 
-```
+```python
 from lassonet import LassoNetClassifierCV 
 model = LassoNetClassifierCV() # LassoNetRegressorCV
 path = model.fit(X_train, y_train)
@@ -60,9 +60,8 @@ Here are some examples of what you can do with LassoNet. Note that you can switc
 
 #### Using the base interface
 
-The base interface implements a `.fit()` method that is not very useful as it computes a path but does not store any intermediate result.
+The original paper describes how to train LassoNet along a regularization path. This requires the user to manually select a model from the path and made the `.fit()` method useless since the resulting model is always empty. This feature is still available with the `.path(return_state_dicts=True)` method for any base model and returns a list of checkpoints that can be loaded with `.load()`.
 
-Usually, you want to store the intermediate results (with `return_state_dicts=True`) and then load one of the models from the path into the model to inspect it.
 
 ```python
 from lassonet import LassoNetRegressor, plot_path
@@ -88,7 +87,8 @@ You get a `model.feature_importances_` attribute that is the value of the L1 reg
 
 #### Using the cross-validation interface
 
-The cross-validation interface computes validation scores on multiple folds before running a final path on the whole training dataset with the best regularization parameter.
+
+We integrated support for cross-validation (5-fold by default) in the estimators whose name ends with `CV`. For each fold, a path is trained. The best regularization value is then chosen to maximize the average score over all folds. The model is then retrained on the whole training dataset to reach that regularization.
 
 ```python
 model = LassoNetRegressorCV()
@@ -151,12 +151,6 @@ Here are the most important parameters you should be aware of:
 Note that cross-validation, group feature selection and automatic `lambda_start` selection have not been published in papers, you can read the code or [post as issue](https://github.com/lasso-net/lassonet/issues/new) to request more details.
 
 We are currently working (among others) on adding support for convolution layers, auto-encoders and online logging of experiments.
-
-## Cross-validation
-
-The original paper describes how to train LassoNet along a regularization path. This requires the user to manually select a model from the path and made the `.fit()` method useless since the resulting model is always empty. This feature is still available with the `.path()` method for any model or the `lassonet_path` function and returns a list of checkpoints that can be loaded with `.load()`.
-
-Since then, we integrated support for cross-validation (5-fold by default) in the estimators whose name ends with `CV`. For each fold, a path is trained. The best regularization value is then chosen to maximize the average performance over all folds. The model is then retrained on the whole training dataset to reach that regularization.
 
 ## Website
 
