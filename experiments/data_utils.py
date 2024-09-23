@@ -111,39 +111,6 @@ def load_isolet():
     return (x_train, y_train - 1), (x_test, y_test - 1)
 
 
-def load_activity():
-    x_train = np.loadtxt(
-        os.path.join("/home/lemisma/datasets/dataset_uci", "final_X_train.txt"),
-        delimiter=",",
-        encoding="UTF-8",
-    )
-    x_test = np.loadtxt(
-        os.path.join("/home/lemisma/datasets/dataset_uci", "final_X_test.txt"),
-        delimiter=",",
-        encoding="UTF-8",
-    )
-    y_train = np.loadtxt(
-        os.path.join("/home/lemisma/datasets/dataset_uci", "final_y_train.txt"),
-        delimiter=",",
-        encoding="UTF-8",
-    )
-    y_test = np.loadtxt(
-        os.path.join("/home/lemisma/datasets/dataset_uci", "final_y_test.txt"),
-        delimiter=",",
-        encoding="UTF-8",
-    )
-
-    X = MinMaxScaler(feature_range=(0, 1)).fit_transform(
-        np.concatenate((x_train, x_test))
-    )
-    x_train = X[: len(y_train)]
-    x_test = X[len(y_train) :]
-
-    print(x_train.shape, y_train.shape)
-    print(x_test.shape, y_test.shape)
-    return (x_train, y_train), (x_test, y_test)
-
-
 import numpy as np
 
 
@@ -256,13 +223,13 @@ def load_data(fashion=False, digit=None, normalize=False):
 
 def load_mnist():
     train, test = load_data(fashion=False, normalize=True)
-    x_train, x_test, y_train, y_test = train_test_split(test[0], test[1], test_size=0.6)
+    x_train, x_test, y_train, y_test = train_test_split(test[0], test[1], test_size=0.2)
     return (x_train, y_train), (x_test, y_test)
 
 
 def load_fashion():
     train, test = load_data(fashion=True, normalize=True)
-    x_train, x_test, y_train, y_test = train_test_split(test[0], test[1], test_size=0.6)
+    x_train, x_test, y_train, y_test = train_test_split(test[0], test[1], test_size=0.2)
     return (x_train, y_train), (x_test, y_test)
 
 
@@ -333,3 +300,21 @@ def load_activity():
     print(x_train.shape, y_train.shape)
     print(x_test.shape, y_test.shape)
     return (x_train, y_train), (x_test, y_test)
+
+
+def load_dataset(dataset):
+    if dataset == "MNIST":
+        return load_mnist()
+    elif dataset == "MNIST-Fashion":
+        return load_fashion()
+    if dataset == "MICE":
+        return load_mice()
+    elif dataset == "COIL":
+        return load_coil()
+    elif dataset == "ISOLET":
+        return load_isolet()
+    elif dataset == "Activity":
+        return load_activity()
+    else:
+        print("Please specify a valid dataset")
+        return None
