@@ -1,6 +1,5 @@
 import itertools
 import random
-import sys
 import warnings
 from abc import ABCMeta, abstractmethod, abstractstaticmethod
 from dataclasses import dataclass
@@ -28,6 +27,13 @@ from .model import LassoNet
 
 def abstractattr(f):
     return property(abstractmethod(f))
+
+
+class NonFiniteLossError(AssertionError):
+    """The training loss became nan or infinite.
+
+    Subclass of AssertionError, because the training loop used `assert False`.
+    """
 
 
 @dataclass
@@ -299,18 +305,14 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                         + self.gamma_skip * model.l2_regularization_skip()
                     )
                     if not torch.isfinite(ans):
-                        print(f"Loss is {ans}", file=sys.stderr)
-                        print("Did you normalize input?", file=sys.stderr)
-                        print("Loss::", crit.item())
-                        print(
-                            "l2_regularization:",
-                            model.l2_regularization(),
+                        raise NonFiniteLossError(
+                            f"Loss is {ans.item()} "
+                            f"(criterion: {crit.item()}, "
+                            f"l2_regularization: {float(model.l2_regularization())}, "
+                            "l2_regularization_skip: "
+                            f"{float(model.l2_regularization_skip())}). "
+                            "Did you normalize input?"
                         )
-                        print(
-                            "l2_regularization_skip:",
-                            model.l2_regularization_skip(),
-                        )
-                        assert False
                     ans.backward()
                     loss += ans.item() * batch_size / n_train
                     return ans
@@ -533,7 +535,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             self, X[train_ind], y[train_ind], lambda_seq=lambda_seq
         )
 
-    def stability_selection(self, X, y, n_models=20) -> Tuple[
+    def stability_selection(self, X, y, n_models=20, max_retries=3) -> Tuple[
         List[List[HistoryItem]],
         torch.Tensor,
         Tuple[torch.Tensor, torch.LongTensor],
@@ -549,6 +551,10 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             Target values
         n_models : int
             Number of models to train
+        max_retries : int, default=3
+            If the loss becomes nan or infinite on a subsample,
+            draw a new subsample, at most this number of times per model.
+            After that, NonFiniteLossError is raised.
 
         Returns
         -------
@@ -565,10 +571,19 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         """
         WRONG_THRESHOLD = 1 / 2
 
-        path = self._stability_selection_path(X, y)
+        def subsample_path(lambda_seq=None):
+            for attempt in range(max_retries + 1):
+                try:
+                    return self._stability_selection_path(X, y, lambda_seq)
+                except NonFiniteLossError as e:
+                    if attempt == max_retries:
+                        raise
+                    warnings.warn(f"{e} Drawing a new subsample.")
+
+        path = subsample_path()
         lambda_seq = [it.lambda_ for it in path]
         paths = [
-            self._stability_selection_path(X, y, lambda_seq)
+            subsample_path(lambda_seq)
             for _ in tqdm(range(n_models), desc="Stability selection")
         ]
         prob, expected_wrong = selection_probability(paths)

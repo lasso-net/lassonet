@@ -6,6 +6,7 @@ from .interfaces import (
     LassoNetCoxRegressorCV,
     LassoNetRegressor,
     LassoNetRegressorCV,
+    NonFiniteLossError,
     lassonet_path,
 )
 from .model import LassoNet

@@ -1,10 +1,56 @@
+from types import SimpleNamespace
+
 import numpy as np
 import pytest
 import torch
 from scipy.stats import norm
 
+from lassonet import LassoNetRegressor, NonFiniteLossError
 from lassonet.interfaces import LassoNetIntervalRegressor
 from lassonet.prox import prox
+
+
+def test_nonfinite_loss_raises():
+    X = np.full((20, 3), np.inf)
+    y = np.zeros(20)
+    model = LassoNetRegressor(hidden_dims=(5,), n_iters=(2, 2))
+    with pytest.raises(NonFiniteLossError):
+        model.fit(X, y)
+
+
+def _fake_path(selected):
+    return [
+        SimpleNamespace(lambda_=lambda_, selected=torch.tensor(s))
+        for lambda_, s in zip((1.0, 2.0, 3.0), selected)
+    ]
+
+
+def test_stability_selection_draws_new_subsample(monkeypatch):
+    model = LassoNetRegressor()
+    calls = []
+
+    def subsample_path(X, y, lambda_seq=None):
+        calls.append(lambda_seq)
+        if len(calls) == 2:
+            raise NonFiniteLossError("Loss is nan.")
+        return _fake_path([[True, True], [True, False], [False, False]])
+
+    monkeypatch.setattr(model, "_stability_selection_path", subsample_path)
+    with pytest.warns(UserWarning, match="Drawing a new subsample"):
+        *_, paths, prob = model.stability_selection(None, None, n_models=3)
+    assert len(paths) == 3
+    assert len(calls) == 5
+
+
+def test_stability_selection_stops_after_max_retries(monkeypatch):
+    model = LassoNetRegressor()
+
+    def subsample_path(X, y, lambda_seq=None):
+        raise NonFiniteLossError("Loss is nan.")
+
+    monkeypatch.setattr(model, "_stability_selection_path", subsample_path)
+    with pytest.warns(UserWarning), pytest.raises(NonFiniteLossError):
+        model.stability_selection(None, None, max_retries=2)
 
 
 @pytest.mark.parametrize("lambda_", [0.0, 1e-3])
