@@ -4,6 +4,17 @@ import torch
 from scipy.stats import norm
 
 from lassonet.interfaces import LassoNetIntervalRegressor
+from lassonet.prox import prox
+
+
+@pytest.mark.parametrize("lambda_", [0.0, 1e-3])
+def test_prox_zero_skip_weight(lambda_):
+    # a zero skip weight with non-zero first-layer weights gave nan (lasso-net#75)
+    v = torch.zeros(1, 1)
+    u = torch.full((10, 1), 0.5)
+    beta, theta = prox(v, u, lambda_=lambda_, lambda_bar=0, M=10)
+    assert (beta == 0).all()
+    assert (theta == 0).all()
 
 
 def interval_loss(y, mu, sigma):
