@@ -36,7 +36,11 @@ def prox(v, u, *, lambda_, lambda_bar, M):
 
     norm_v = torch.norm(v, p=2, dim=0)
 
-    x = F.relu(1 - a_s / norm_v) / (1 + s * M**2)
+    # a feature with a zero skip weight stays at zero: this avoids 0 / 0 and inf * 0
+    nonzero = norm_v > 0
+    safe_norm = torch.where(nonzero, norm_v, torch.ones_like(norm_v))
+    x = F.relu(1 - a_s / safe_norm) / (1 + s * M**2)
+    x = torch.where(nonzero, x, torch.zeros_like(x))
 
     w = M * x * norm_v
     intervals = soft_threshold(lambda_bar, u_abs_sorted)

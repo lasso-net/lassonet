@@ -1,6 +1,5 @@
 import itertools
 import random
-import sys
 import warnings
 from abc import ABCMeta, abstractmethod, abstractstaticmethod
 from dataclasses import dataclass
@@ -17,6 +16,7 @@ from sklearn.base import (
     RegressorMixin,
 )
 from sklearn.model_selection import check_cv, train_test_split
+from torch.special import log_ndtr
 from tqdm import tqdm
 
 from lassonet.utils import selection_probability
@@ -27,6 +27,13 @@ from .model import LassoNet
 
 def abstractattr(f):
     return property(abstractmethod(f))
+
+
+class NonFiniteLossError(AssertionError):
+    """The training loss became nan or infinite.
+
+    Subclass of AssertionError, because the training loop used `assert False`.
+    """
 
 
 @dataclass
@@ -298,18 +305,14 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
                         + self.gamma_skip * model.l2_regularization_skip()
                     )
                     if not torch.isfinite(ans):
-                        print(f"Loss is {ans}", file=sys.stderr)
-                        print("Did you normalize input?", file=sys.stderr)
-                        print("Loss::", crit.item())
-                        print(
-                            "l2_regularization:",
-                            model.l2_regularization(),
+                        raise NonFiniteLossError(
+                            f"Loss is {ans.item()} "
+                            f"(criterion: {crit.item()}, "
+                            f"l2_regularization: {float(model.l2_regularization())}, "
+                            "l2_regularization_skip: "
+                            f"{float(model.l2_regularization_skip())}). "
+                            "Did you normalize input?"
                         )
-                        print(
-                            "l2_regularization_skip:",
-                            model.l2_regularization_skip(),
-                        )
-                        assert False
                     ans.backward()
                     loss += ans.item() * batch_size / n_train
                     return ans
@@ -532,7 +535,7 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             self, X[train_ind], y[train_ind], lambda_seq=lambda_seq
         )
 
-    def stability_selection(self, X, y, n_models=20) -> Tuple[
+    def stability_selection(self, X, y, n_models=20, max_retries=3) -> Tuple[
         List[List[HistoryItem]],
         torch.Tensor,
         Tuple[torch.Tensor, torch.LongTensor],
@@ -548,6 +551,10 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
             Target values
         n_models : int
             Number of models to train
+        max_retries : int, default=3
+            If the loss becomes nan or infinite on a subsample,
+            draw a new subsample, at most this number of times per model.
+            After that, NonFiniteLossError is raised.
 
         Returns
         -------
@@ -564,10 +571,19 @@ class BaseLassoNet(BaseEstimator, metaclass=ABCMeta):
         """
         WRONG_THRESHOLD = 1 / 2
 
-        path = self._stability_selection_path(X, y)
+        def subsample_path(lambda_seq=None):
+            for attempt in range(max_retries + 1):
+                try:
+                    return self._stability_selection_path(X, y, lambda_seq)
+                except NonFiniteLossError as e:
+                    if attempt == max_retries:
+                        raise
+                    warnings.warn(f"{e} Drawing a new subsample.")
+
+        path = subsample_path()
         lambda_seq = [it.lambda_ for it in path]
         paths = [
-            self._stability_selection_path(X, y, lambda_seq)
+            subsample_path(lambda_seq)
             for _ in tqdm(range(n_models), desc="Stability selection")
         ]
         prob, expected_wrong = selection_probability(paths)
@@ -758,7 +774,17 @@ class LassoNetCoxRegressor(
 class LassoNetIntervalRegressor(BaseLassoNet):
     """Use LassoNet for Sparse Interval-Censored regression
 
-    y has 5 dimensions: latent_time_u, latent_time_v, delta_1, delta_2, delta_3
+    y has 5 columns: U, V, delta_1, delta_2, delta_3, with U <= V.
+    This is "case 2" interval censoring (Huang and Wellner, 1997):
+
+    - delta_1 = 1: left-censored, the event happened before U (T <= U)
+    - delta_2 = 1: interval-censored (U < T <= V)
+    - delta_3 = 1: right-censored, the event happened after V (T > V)
+
+    A left-censored row only uses U and a right-censored row only uses V.
+    Do not encode censored rows as bounds with placeholders, such as
+    (0, t) or (t, inf): store the observed time in U for left-censored rows
+    and in V for right-censored rows, for example U = V = t.
 
     See https://arxiv.org/abs/2206.06885
     """
@@ -770,8 +796,6 @@ class LassoNetIntervalRegressor(BaseLassoNet):
 
         def forward(self, inp):
             return super().forward(inp), torch.exp(self.log_sigma)
-
-    Fdist = torch.distributions.Normal(0, 1).cdf
 
     def _convert_y(self, y):
         y = torch.FloatTensor(y).to(self.device)
@@ -800,14 +824,28 @@ class LassoNetIntervalRegressor(BaseLassoNet):
         mo, sigma = output
         mo = mo.squeeze()
         us, vs, delta1, delta2, delta3 = y.T
-
-        fu = LassoNetIntervalRegressor.Fdist((torch.log(us) - mo) / sigma)
-        fv = LassoNetIntervalRegressor.Fdist((torch.log(vs) - mo) / sigma)
-        return -torch.mean(
-            delta1 * torch.log(fu + 1e-8)
-            + delta2 * torch.log(fv - fu + 1e-8)
-            + delta3 * torch.log(1 - fv + 1e-8)
+        zu = (torch.log(us) - mo) / sigma
+        zv = (torch.log(vs) - mo) / sigma
+        # select rows with masks, because 0 * nan is nan
+        left, interval, right = delta1.bool(), delta2.bool(), delta3.bool()
+        # log(F(b) - F(a)), computed in the lower tail where it is accurate;
+        # the clamp keeps it finite when F(a) = F(b) in floating point
+        a, b = zu[interval], zv[interval]
+        flip = a > 0
+        a, b = torch.where(flip, -b, a), torch.where(flip, -a, b)
+        log_fb = log_ndtr(b)
+        diff = torch.clamp(log_ndtr(a) - log_fb, max=-1e-6)
+        ll = torch.cat(
+            [
+                log_ndtr(zu[left]),  # log F(U)
+                log_fb + torch.log1p(-torch.exp(diff)),  # log(F(V) - F(U))
+                log_ndtr(-zv[right]),  # log(1 - F(V)) = log F(-V)
+            ]
         )
+        # log(p + 1e-8): a row far from its interval has a bounded loss,
+        # which keeps training stable when sigma becomes small
+        ll = torch.logaddexp(ll, torch.full_like(ll, np.log(1e-8)))
+        return -ll.sum() / len(y)
 
     def predict(self, X):
         self.model.eval()
