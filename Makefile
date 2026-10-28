@@ -1,9 +1,9 @@
 pypi: dist
-	twine upload dist/*
-	
+	uvx twine upload dist/*
+
 dist:
 	- rm -rf dist
-	python3 setup.py sdist bdist_wheel
+	uv build
 
 docs:
 	cd sphinx_docs && $(MAKE) html
