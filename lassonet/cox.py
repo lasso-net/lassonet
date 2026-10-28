@@ -4,6 +4,8 @@ implement CoxPHLoss
 
 __all__ = ["CoxPHLoss", "concordance_index"]
 
+from itertools import groupby
+
 import torch
 from sortedcontainers import SortedList
 
@@ -25,8 +27,12 @@ class CoxPHLoss(torch.nn.Module):
 
         durations, events = y.T
 
-        # sort input
-        durations, idx = durations.sort(descending=True)
+        # sort by decreasing duration. Within a tie, censored rows come first so
+        # that they are in the risk set of every event with the same duration.
+        by_event = events.argsort(stable=True)
+        _, by_duration = durations[by_event].sort(descending=True, stable=True)
+        idx = by_event[by_duration]
+        durations = durations[idx]
         log_h = log_h[idx]
         events = events[idx]
 
@@ -89,9 +95,14 @@ def concordance_index(risk, time, event):
     past = SortedList()
     num = 0
     den = 0
-    for i in order:
-        num += len(past) - past.bisect_right(risk[i])
-        den += len(past)
-        if event[i]:
-            past.add(risk[i])
+    # Observations with the same time are not comparable with each other:
+    # compare the whole group with earlier events, then add its events.
+    for _, group in groupby(order, key=time.__getitem__):
+        group = list(group)
+        for i in group:
+            num += len(past) - past.bisect_right(risk[i])
+            den += len(past)
+        for i in group:
+            if event[i]:
+                past.add(risk[i])
     return num / den
